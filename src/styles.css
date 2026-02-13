@@ -1,0 +1,746 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #050816;
+  color: #f9fafb;
+}
+
+.app-root {
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #1e293b 0, #020617 55%);
+  color: inherit;
+}
+
+.swap-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 3rem;
+}
+
+.swap-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  margin: -0.75rem -0.75rem 1.5rem;
+  background: rgba(15, 23, 42, 0.9);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.4);
+}
+
+.swap-header-title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.swap-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.swap-status-badge {
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.swap-status-monitoring,
+.swap-status-dealfound {
+  background: rgba(34, 197, 94, 0.12);
+  color: #4ade80;
+}
+
+.swap-status-windowclosing {
+  background: rgba(234, 179, 8, 0.14);
+  color: #facc15;
+}
+
+.swap-status-swapinprogress {
+  background: rgba(59, 130, 246, 0.16);
+  color: #60a5fa;
+}
+
+.swap-status-completed {
+  background: rgba(56, 189, 248, 0.16);
+  color: #22d3ee;
+}
+
+.swap-status-expired {
+  background: rgba(239, 68, 68, 0.14);
+  color: #f97373;
+}
+
+.swap-header-right {
+  text-align: right;
+}
+
+.swap-countdown-label {
+  display: block;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #9ca3af;
+}
+
+.swap-countdown-timer {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 500;
+}
+
+.swap-countdown-estimated {
+  font-size: 0.7rem;
+  padding: 0.12rem 0.4rem;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.4);
+  color: #e5e7eb;
+}
+
+.swap-page-main {
+  display: grid;
+  grid-template-columns: minmax(0, 2.3fr) minmax(260px, 0.9fr);
+  gap: 1.25rem;
+  align-items: flex-start;
+}
+
+.swap-page-main-left,
+.swap-page-main-right {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.card {
+  background: radial-gradient(circle at top left, #0f172a, #020617 65%);
+  border-radius: 0.9rem;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  padding: 1rem 1.1rem;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.7);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.card-header h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.card-subtitle {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #9ca3af;
+}
+
+.label {
+  display: block;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #9ca3af;
+}
+
+.purchase-total {
+  text-align: right;
+}
+
+.purchase-total-label {
+  display: block;
+  font-size: 0.7rem;
+  color: #9ca3af;
+}
+
+.purchase-total-value {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.purchase-items {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.purchase-item {
+  padding: 0.55rem 0.6rem;
+  border-radius: 0.6rem;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(31, 41, 55, 0.9);
+}
+
+.purchase-item-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+.purchase-item-title {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.purchase-item-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.1rem;
+  font-size: 0.8rem;
+  color: #9ca3af;
+}
+
+.purchase-item-attributes {
+  margin-top: 0.4rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.attribute-pill {
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid rgba(75, 85, 99, 0.9);
+  font-size: 0.7rem;
+  color: #e5e7eb;
+}
+
+.purchase-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  font-size: 0.8rem;
+  color: #d1d5db;
+}
+
+.purchase-delivery,
+.purchase-confidence {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.link-button {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #60a5fa;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.link-button.small {
+  font-size: 0.75rem;
+}
+
+.link-button:hover {
+  text-decoration: underline;
+}
+
+.parsed-data {
+  margin-top: 0.75rem;
+  padding: 0.6rem;
+  border-radius: 0.6rem;
+  background: #020617;
+  border: 1px solid rgba(31, 41, 55, 0.9);
+  font-size: 0.75rem;
+  max-height: 240px;
+  overflow: auto;
+}
+
+.banner {
+  border-radius: 0.7rem;
+  padding: 0.5rem 0.6rem;
+  font-size: 0.8rem;
+  margin: 0.5rem 0;
+}
+
+.banner-warning {
+  background: rgba(250, 204, 21, 0.1);
+  border: 1px solid rgba(234, 179, 8, 0.6);
+  color: #fde68a;
+}
+
+.banner-error {
+  background: rgba(248, 113, 113, 0.08);
+  border: 1px solid rgba(248, 113, 113, 0.7);
+  color: #fecaca;
+}
+
+.savings-strip {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+}
+
+.savings-main {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.savings-amount {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.savings-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid rgba(75, 85, 99, 0.9);
+  cursor: pointer;
+  background: rgba(15, 23, 42, 0.9);
+}
+
+.toggle-thumb {
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: 999px;
+  background: #6b7280;
+}
+
+.toggle-on .toggle-thumb {
+  background: #22c55e;
+}
+
+.toggle-label {
+  font-size: 0.75rem;
+}
+
+.deal-header {
+  align-items: flex-start;
+}
+
+.deal-header-toggles {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  color: #d1d5db;
+}
+
+.deal-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.75rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.deal-card {
+  border-radius: 0.9rem;
+  border: 1px solid rgba(31, 41, 55, 0.9);
+  padding: 0.7rem 0.75rem;
+  background: rgba(15, 23, 42, 0.9);
+}
+
+.deal-card-header {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.deal-card-merchant-name {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.deal-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.3rem;
+}
+
+.pill {
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+  font-size: 0.7rem;
+  border: 1px solid rgba(75, 85, 99, 0.9);
+}
+
+.pill-tier-exact {
+  border-color: #22c55e;
+  color: #4ade80;
+}
+
+.pill-tier-attribute {
+  border-color: #38bdf8;
+  color: #7dd3fc;
+}
+
+.pill-tier-similar {
+  border-color: #a855f7;
+  color: #e9d5ff;
+}
+
+.pill-warning {
+  border-color: #f97316;
+  color: #fed7aa;
+}
+
+.pill-coupon {
+  border-color: #22c55e;
+  background: rgba(22, 163, 74, 0.18);
+  color: #bbf7d0;
+}
+
+.pill-coupon-inline {
+  border-radius: 999px;
+  padding: 0.15rem 0.5rem;
+  border: 1px dashed rgba(22, 163, 74, 0.8);
+  font-size: 0.75rem;
+}
+
+.deal-card-price,
+.deal-card-savings {
+  text-align: right;
+}
+
+.deal-card-total {
+  display: block;
+  font-weight: 600;
+}
+
+.deal-breakdown {
+  margin-top: 0.6rem;
+  border-top: 1px solid rgba(31, 41, 55, 0.9);
+  padding-top: 0.5rem;
+  font-size: 0.78rem;
+  display: grid;
+  gap: 0.2rem;
+}
+
+.deal-breakdown > div {
+  display: flex;
+  justify-content: space-between;
+}
+
+.deal-breakdown-original {
+  margin-top: 0.25rem;
+  border-top: 1px dashed rgba(31, 41, 55, 0.9);
+  padding-top: 0.25rem;
+}
+
+.deal-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.6rem;
+}
+
+.deal-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  align-items: center;
+  font-size: 0.75rem;
+}
+
+.deal-card-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+}
+
+.btn-primary,
+.btn-secondary,
+.btn-ghost {
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8rem;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #2563eb, #22c55e);
+  color: #f9fafb;
+}
+
+.btn-primary:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.btn-secondary {
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(75, 85, 99, 0.9);
+  color: #e5e7eb;
+}
+
+.btn-ghost {
+  background: none;
+  border: 1px solid rgba(75, 85, 99, 0.7);
+  color: #e5e7eb;
+  width: 100%;
+  text-align: left;
+}
+
+.btn-ghost:hover {
+  background: rgba(15, 23, 42, 0.8);
+}
+
+.why-match {
+  margin-top: 0.5rem;
+  font-size: 0.78rem;
+  color: #d1d5db;
+}
+
+.warning-text {
+  color: #fecaca;
+}
+
+.empty-state {
+  margin-top: 0.75rem;
+  text-align: left;
+}
+
+.empty-state h3 {
+  margin: 0 0 0.25rem;
+  font-size: 0.95rem;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #9ca3af;
+}
+
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.7);
+  display: flex;
+  justify-content: flex-end;
+  z-index: 50;
+}
+
+.drawer {
+  width: min(480px, 100%);
+  background: #020617;
+  border-left: 1px solid rgba(30, 64, 175, 0.7);
+  box-shadow: -20px 0 60px rgba(15, 23, 42, 0.9);
+  padding: 1rem 1.1rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.25rem;
+}
+
+.drawer-header h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.icon-button {
+  border: none;
+  background: none;
+  color: #9ca3af;
+  cursor: pointer;
+}
+
+.drawer-section {
+  border-radius: 0.8rem;
+  border: 1px solid rgba(31, 41, 55, 0.9);
+  padding: 0.75rem 0.8rem;
+  background: rgba(15, 23, 42, 0.9);
+}
+
+.drawer-section h3 {
+  margin: 0 0 0.4rem;
+  font-size: 0.9rem;
+}
+
+.comparison-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  font-size: 0.8rem;
+}
+
+.comparison-column {
+  padding: 0.4rem 0.45rem;
+  border-radius: 0.6rem;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(31, 41, 55, 0.9);
+}
+
+.comparison-column h4 {
+  margin: 0 0 0.25rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #9ca3af;
+}
+
+.comparison-merchant {
+  font-weight: 500;
+}
+
+.comparison-return {
+  margin-top: 0.2rem;
+}
+
+.radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.radio-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+}
+
+.radio-option input[type="radio"] {
+  margin-top: 0.15rem;
+}
+
+.radio-title {
+  font-weight: 500;
+}
+
+.radio-description {
+  font-size: 0.78rem;
+  color: #9ca3af;
+}
+
+.radio-disabled {
+  opacity: 0.55;
+}
+
+.info-text {
+  margin-top: 0.35rem;
+  font-size: 0.78rem;
+  color: #9ca3af;
+}
+
+.drawer-actions {
+  margin-top: 0.6rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.4rem;
+}
+
+.audit-panel,
+.privacy-panel {
+  font-size: 0.8rem;
+}
+
+.audit-timeline {
+  list-style: none;
+  padding: 0;
+  margin: 0.6rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.audit-event-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.audit-event-label {
+  font-weight: 500;
+}
+
+.audit-event-time {
+  font-size: 0.7rem;
+  color: #9ca3af;
+}
+
+.audit-event-detail {
+  font-size: 0.78rem;
+  color: #d1d5db;
+}
+
+.privacy-body {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: #d1d5db;
+}
+
+.privacy-actions {
+  list-style: none;
+  padding: 0;
+  margin: 0.6rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+@media (max-width: 960px) {
+  .swap-page-main {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .swap-header {
+    position: static;
+    margin: 0 0 1rem;
+  }
+
+  .swap-page {
+    padding-top: 1.25rem;
+  }
+
+  .deal-card-header {
+    grid-template-columns: 1.5fr 1fr;
+    grid-template-rows: auto auto;
+  }
+
+  .deal-card-savings {
+    grid-column: 1 / -1;
+  }
+}
+
