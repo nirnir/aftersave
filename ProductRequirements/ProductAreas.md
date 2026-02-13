@@ -1,0 +1,17 @@
+- AI Browser: Front end app
+    - Login and registration to services
+    - Configuration and account management
+    - Notifications
+    - Swap user journey
+    - Purchase listener - identify purchases made
+    - Deal finder scraper
+    - LLM
+- DealEngine - Backend engine to find swap deals
+    - Sellers / Affiliates APIs
+    - Deal finder Scraper
+    - Identical match finder
+    - Similar match finder: (Better at same price, similar at better price)
+    - Regional - adapt to local sellers per country
+    - Promotional - connect to category specific promoters (i.e boosted media for sim racing)
+- Sellers board(subscription) - show real time opportunities for them to bid
+    - Match between AfterSave opportunities and seller’s inventory
