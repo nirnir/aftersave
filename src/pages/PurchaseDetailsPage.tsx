@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   MatchTier,
   Purchase,
@@ -173,6 +173,7 @@ function calculateTimeRemaining(endIso: string) {
 
 export const PurchaseDetailsPage: React.FC = () => {
   const { purchaseId } = useParams<{ purchaseId: string }>();
+  const navigate = useNavigate();
   // In V1 this page is backed by concrete data; here we wire mock data.
   // TODO: Load purchase by purchaseId from API
   const purchase = MOCK_PURCHASE;
@@ -303,6 +304,13 @@ export const PurchaseDetailsPage: React.FC = () => {
 
   return (
     <div className="swap-page">
+      <button type="button" className="back-link" onClick={() => navigate("/")}>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M10 3L5 8l5 5" />
+        </svg>
+        Back to purchases
+      </button>
+
       <Header
         purchase={purchase}
         status={status}

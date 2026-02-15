@@ -1,0 +1,254 @@
+- generic [active] [ref=e1]:
+  - alert [ref=e2]
+  - generic [ref=e4]:
+    - banner [ref=e5]:
+      - generic [ref=e6]:
+        - link "Autosave" [ref=e8] [cursor=pointer]:
+          - /url: /
+          - img [ref=e10]
+          - generic [ref=e14]: Autosave
+        - generic [ref=e15]:
+          - link "Login" [ref=e16] [cursor=pointer]:
+            - /url: /login
+          - link "Sign Up" [ref=e17] [cursor=pointer]:
+            - /url: /waitlist
+            - button "Sign Up" [ref=e18]:
+              - generic [ref=e20]:
+                - text: Sign Up
+                - generic [ref=e21]:
+                  - img
+    - main [ref=e22]:
+      - generic [ref=e30]:
+        - generic [ref=e31]: Dealership Software Management
+        - heading "Stop Wasting Money On Software" [level=1] [ref=e32]:
+          - text: Stop Wasting Money
+          - text: On Software
+        - paragraph [ref=e33]: Autosave automatically tracks and optimizes your dealership's SaaS spending.
+        - generic [ref=e34]:
+          - link "Start Saving Now" [ref=e35] [cursor=pointer]:
+            - /url: /waitlist
+            - button "Start Saving Now" [ref=e36]:
+              - generic [ref=e38]:
+                - text: Start Saving Now
+                - generic [ref=e39]:
+                  - img
+          - button "Watch Demo" [ref=e40] [cursor=pointer]:
+            - generic [ref=e42]: Watch Demo
+      - generic [ref=e58]:
+        - paragraph [ref=e59]: TRUSTED BY LEADING DEALERSHIPS
+        - generic [ref=e63]:
+          - img "Toyota logo" [ref=e65]
+          - img "Honda logo" [ref=e67]
+          - img "Lexus logo" [ref=e69]
+          - img "BMW logo" [ref=e71]
+          - img "Mercedes-Benz logo" [ref=e73]
+          - img "Ford logo" [ref=e75]
+      - generic [ref=e79]:
+        - generic [ref=e81]:
+          - heading "742k" [level=2] [ref=e82]
+          - paragraph [ref=e83]: Average Annual Waste
+        - generic [ref=e84]:
+          - generic [ref=e86]:
+            - img [ref=e88]
+            - generic [ref=e90]: 0%
+            - generic [ref=e91]: Vendors With Negative ROI
+          - generic [ref=e93]:
+            - img [ref=e95]
+            - generic [ref=e97]: 0%
+            - generic [ref=e98]: Duplicate Vendors
+          - generic [ref=e100]:
+            - img [ref=e102]
+            - generic [ref=e105]: 0%
+            - generic [ref=e106]: ROI on Unused Software
+      - generic [ref=e109]:
+        - generic [ref=e110]:
+          - generic [ref=e113]:
+            - img [ref=e116]
+            - heading "All Your Vendors, One Dashboard." [level=2] [ref=e118]
+            - paragraph [ref=e119]: Instantly see your dealership's software vendors, pricing, renewal dates, and usage. Identify unused tools and stop wasting money.
+            - generic [ref=e120]:
+              - generic [ref=e123]:
+                - img [ref=e125]
+                - generic [ref=e128]:
+                  - heading "Automatic discovery" [level=3] [ref=e129]
+                  - paragraph [ref=e130]: of all your SaaS tools
+              - generic [ref=e133]:
+                - img [ref=e135]
+                - generic [ref=e138]:
+                  - heading "Contracts" [level=3] [ref=e139]
+                  - paragraph [ref=e140]: view all contracts in one view
+              - generic [ref=e143]:
+                - img [ref=e145]
+                - generic [ref=e148]:
+                  - heading "Renewal alerts" [level=3] [ref=e149]
+                  - paragraph [ref=e150]: never miss a contract renewal again
+          - img "Vendor management dashboard" [ref=e154]
+        - generic [ref=e157]:
+          - img [ref=e160]
+          - heading "Know What's Profitable (And What's Not)" [level=2] [ref=e162]
+          - paragraph [ref=e163]: Instantly see each vendor's real ROI, track usage, and maximize every dollar—including your co-op budget. No legwork, just smart decisions.
+          - generic [ref=e164]:
+            - generic [ref=e166]:
+              - img [ref=e168]
+              - heading "Budget Mastery" [level=3] [ref=e171]
+              - paragraph [ref=e172]: Effortlessly set budgets, track pacing, and optimize your co-op funds. Discover recommendations that maximize every co-op dollar.
+            - generic [ref=e174]:
+              - img [ref=e176]
+              - heading "ROI Insights" [level=3] [ref=e178]
+              - paragraph [ref=e179]: See exactly how much each vendor is contributing to your bottom line—no meetings, no guessing, just immediate clarity.
+            - generic [ref=e181]:
+              - img [ref=e183]
+              - heading "Usage Visibility" [level=3] [ref=e186]
+              - paragraph [ref=e187]: Quickly spot unused software and take action. Cancel or reconnect with vendor reps directly from your dashboard.
+        - generic [ref=e188]:
+          - generic [ref=e191]:
+            - img [ref=e194]
+            - heading "Stop Paying for Software You Don't Use" [level=2] [ref=e196]
+            - paragraph [ref=e197]: Instantly uncover and cut wasted spend with AI-driven insights into your dealership's vendor contracts.
+            - generic [ref=e198]:
+              - generic [ref=e201]:
+                - img [ref=e203]
+                - generic [ref=e206]:
+                  - heading "AI-driven Vendor Audits" [level=3] [ref=e207]
+                  - paragraph [ref=e208]: Automatically spot unused software, duplicate services, and overspending to eliminate wasted dollars.
+              - generic [ref=e211]:
+                - img [ref=e213]
+                - generic [ref=e216]:
+                  - heading "One-Click Cost Cutting" [level=3] [ref=e217]
+                  - paragraph [ref=e218]: Effortlessly implement savings recommendations right from your dashboard—no chasing vendors or messy paperwork required.
+              - generic [ref=e221]:
+                - img [ref=e223]
+                - generic [ref=e226]:
+                  - heading "Instant Savings Alerts" [level=3] [ref=e227]
+                  - paragraph [ref=e228]: Receive proactive alerts and clear recommendations so you never miss a chance to save again.
+          - img "Savings opportunities dashboard" [ref=e232]
+      - generic [ref=e235]:
+        - generic [ref=e238]:
+          - generic [ref=e240]: Interactive Demo
+          - heading "See Autosave in Action" [level=2] [ref=e241]
+          - paragraph [ref=e242]: Our platform automatically identifies savings opportunities and delivers actionable recommendations to optimize your software expenses.
+        - generic [ref=e245]:
+          - generic [ref=e246]:
+            - generic [ref=e247]:
+              - generic [ref=e249]: A
+              - generic [ref=e250]: Autosave
+            - navigation [ref=e251]:
+              - button "Dashboard" [ref=e252] [cursor=pointer]:
+                - img [ref=e253]
+                - text: Dashboard
+              - button "Vendor Management" [ref=e256] [cursor=pointer]:
+                - img [ref=e257]
+                - text: Vendor Management
+              - button "Savings Opportunities" [ref=e260] [cursor=pointer]:
+                - img [ref=e261]
+                - text: Savings Opportunities
+              - button "Budget" [ref=e263] [cursor=pointer]:
+                - img [ref=e264]
+                - text: Budget
+          - generic [ref=e266]:
+            - generic [ref=e267]:
+              - heading "Software Expense Dashboard" [level=3] [ref=e268]
+              - generic [ref=e270]: Live Data
+            - paragraph [ref=e275]: Loading dashboard data...
+        - generic [ref=e276]:
+          - link "Try the Full Demo" [ref=e277] [cursor=pointer]:
+            - /url: /waitlist
+            - button "Try the Full Demo" [ref=e278]:
+              - generic [ref=e280]:
+                - text: Try the Full Demo
+                - generic [ref=e281]:
+                  - img
+          - link "Schedule a Walkthrough" [ref=e282] [cursor=pointer]:
+            - /url: /waitlist
+            - button "Schedule a Walkthrough" [ref=e283]:
+              - generic [ref=e285]: Schedule a Walkthrough
+      - generic [ref=e287]:
+        - generic [ref=e290]:
+          - generic [ref=e292]: Benefits
+          - heading "Your Dealership is Leaking Money. Let's Fix That." [level=2] [ref=e293]
+          - paragraph [ref=e294]: Dealerships are buried in software costs, duplicate vendors, and wasted subscriptions. AutoSave acts as your personal spending watchdog—instantly highlighting what to cut, keep, or renegotiate. It's like hiring someone to manage your vendors full-time, without the payroll.
+        - generic [ref=e295]:
+          - generic [ref=e297]:
+            - img [ref=e299]
+            - heading "Plug the Money Leaks" [level=3] [ref=e301]
+            - paragraph [ref=e302]: Immediately identify wasted SaaS expenses and duplication. Dealers save an average of 22% in unnecessary software spend.
+          - generic [ref=e304]:
+            - img [ref=e306]
+            - heading "Don't Over Pay" [level=3] [ref=e308]
+            - paragraph [ref=e309]: Leverage industry-wide vendor pricing data to ensure you aren't overpaying
+          - generic [ref=e311]:
+            - img [ref=e313]
+            - heading "Works Where You Do" [level=3] [ref=e316]
+            - paragraph [ref=e317]: AutoSave integrates effortlessly into your existing workflow and tools, providing immediate results without changing how you operate.
+      - generic [ref=e320]:
+        - generic [ref=e323]:
+          - heading "How It Works" [level=2] [ref=e324]
+          - paragraph [ref=e325]: Get started in minutes with our simple three-step process.
+        - generic [ref=e326]:
+          - generic [ref=e330]:
+            - generic [ref=e331]: "1"
+            - generic [ref=e332]:
+              - heading "Connect your dealership software" [level=3] [ref=e333]
+              - paragraph [ref=e334]: Securely connect your accounting system and software accounts with our one-click integrations.
+          - generic [ref=e337]:
+            - generic [ref=e338]: "2"
+            - generic [ref=e339]:
+              - heading "Instantly track all vendor expenses" [level=3] [ref=e340]
+              - paragraph [ref=e341]: Autosave automatically identifies all your software vendors and tracks your spending in real-time.
+          - generic [ref=e344]:
+            - generic [ref=e345]: "3"
+            - generic [ref=e346]:
+              - heading "Optimize your spending effortlessly" [level=3] [ref=e347]
+              - paragraph [ref=e348]: Receive alerts for unused licenses, upcoming renewals, and opportunities to save.
+      - generic [ref=e350]:
+        - generic [ref=e353]:
+          - heading "What Dealerships Say" [level=2] [ref=e354]
+          - paragraph [ref=e355]: Hear from dealerships that have transformed their software expense management with Autosave.
+        - generic [ref=e356]:
+          - generic [ref=e360]:
+            - img [ref=e362]
+            - generic [ref=e365]:
+              - paragraph [ref=e366]: "\"Autosave cut our software spend by 20% in just two months. It's a no-brainer.\""
+              - generic [ref=e367]:
+                - img "John Smith" [ref=e369]
+                - generic [ref=e370]:
+                  - paragraph [ref=e371]: John Smith
+                  - paragraph [ref=e372]: CFO, Johnson Toyota
+          - generic [ref=e373]:
+            - button "Previous testimonial" [ref=e374] [cursor=pointer]:
+              - img
+              - generic [ref=e375]: Previous testimonial
+            - button "Go to testimonial 1" [ref=e376] [cursor=pointer]:
+              - generic [ref=e377]: Go to testimonial 1
+            - button "Go to testimonial 2" [ref=e378] [cursor=pointer]:
+              - generic [ref=e379]: Go to testimonial 2
+            - button "Go to testimonial 3" [ref=e380] [cursor=pointer]:
+              - generic [ref=e381]: Go to testimonial 3
+            - button "Next testimonial" [ref=e382] [cursor=pointer]:
+              - img
+              - generic [ref=e383]: Next testimonial
+      - generic [ref=e391]:
+        - heading "Ready to Stop Overpaying for Dealership Software?" [level=2] [ref=e392]
+        - paragraph [ref=e393]: Join hundreds of dealerships saving thousands on software expenses every month.
+        - generic [ref=e394]:
+          - link "Start Saving Now" [ref=e395] [cursor=pointer]:
+            - /url: /waitlist
+            - button "Start Saving Now" [ref=e396]:
+              - generic [ref=e398]:
+                - text: Start Saving Now
+                - generic [ref=e399]:
+                  - img
+          - link "Schedule a Demo" [ref=e400] [cursor=pointer]:
+            - /url: /waitlist
+            - button "Schedule a Demo" [ref=e401]:
+              - generic [ref=e403]: Schedule a Demo
+    - contentinfo [ref=e405]:
+      - generic [ref=e406]:
+        - generic [ref=e407]:
+          - generic [ref=e408]:
+            - img [ref=e410]
+            - generic [ref=e414]: Autosave
+          - generic [ref=e415]:
+            - textbox "Enter your email" [ref=e416]
+            - button "Subscribe" [ref=e417] [cursor=pointer]
+        - generic [ref=e418]: © 2025 Autosave. All rights reserved.

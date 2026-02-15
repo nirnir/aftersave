@@ -3,7 +3,7 @@ import {
   PurchaseStatus
 } from "../types/purchase";
 
-// ---------- Formatting Utilities ----------
+// ---------- Formatting ----------
 
 export function formatCurrency(
   amount: number,
@@ -22,6 +22,14 @@ export function formatCurrency(
 
 export function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString();
+}
+
+export function formatPurchaseDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric"
+  });
 }
 
 export function calculateTimeRemaining(endIso: string): {
@@ -55,6 +63,21 @@ export function formatTimeRemainingFromSeconds(seconds?: number): {
     label: `${hours}h ${minutes}m`,
     estimated: false
   };
+}
+
+export function formatTimeRemainingFriendly(seconds?: number): string | null {
+  if (seconds === undefined || seconds <= 0) return null;
+  const hours = Math.floor(seconds / 3600);
+  const days = Math.floor(hours / 24);
+  if (days > 0) {
+    return `${days} day${days === 1 ? "" : "s"} left to return`;
+  }
+  return `Only ${hours} hour${hours === 1 ? "" : "s"} left!`;
+}
+
+export function isUrgent(seconds?: number): boolean {
+  if (seconds === undefined || seconds <= 0) return false;
+  return seconds < 24 * 3600;
 }
 
 // ---------- Status Utilities ----------
@@ -91,24 +114,22 @@ export function getStatusColorClass(status: PurchaseStatus): string {
 
 export type FilterOption =
   | "all"
-  | "savings_found"
-  | "tracking"
-  | "done";
+  | "savings_available"
+  | "searching"
+  | "return_soon";
 
 const filterStatusGroups: Record<FilterOption, PurchaseStatus[]> = {
   all: [],
-  savings_found: ["deal_found", "window_closing"],
-  tracking: ["monitoring", "swap_in_progress"],
-  done: ["swap_completed", "expired", "paused", "needs_review"]
+  savings_available: ["deal_found", "window_closing"],
+  searching: ["monitoring", "swap_in_progress"],
+  return_soon: ["needs_review", "paused", "expired", "swap_completed"]
 };
 
 export function filterPurchases(
   purchases: PurchaseListItem[],
   filter: FilterOption
 ): PurchaseListItem[] {
-  if (filter === "all") {
-    return purchases;
-  }
+  if (filter === "all") return purchases;
   const statuses = filterStatusGroups[filter];
   return purchases.filter((p) => statuses.includes(p.status));
 }
@@ -122,15 +143,31 @@ export function countByFilter(
   return purchases.filter((p) => statuses.includes(p.status)).length;
 }
 
+// ---------- Savings Aggregation ----------
+
+export function getTotalSavings(purchases: PurchaseListItem[]): {
+  totalAmount: number;
+  count: number;
+} {
+  const actionable = purchases.filter(
+    (p) =>
+      (p.status === "deal_found" || p.status === "window_closing") &&
+      p.best_deal_summary
+  );
+  const totalAmount = actionable.reduce(
+    (sum, p) => sum + (p.best_deal_summary?.best_net_savings ?? 0),
+    0
+  );
+  return { totalAmount, count: actionable.length };
+}
+
 // ---------- Summary Message ----------
 
 export function getSummaryMessage(purchases: PurchaseListItem[]): string {
-  const savingsCount = purchases.filter(
-    (p) => p.status === "deal_found" || p.status === "window_closing"
-  ).length;
+  const { totalAmount, count } = getTotalSavings(purchases);
 
-  if (savingsCount > 0) {
-    return `${savingsCount} purchase${savingsCount === 1 ? " has" : "s have"} savings ready`;
+  if (count > 0) {
+    return `${count} purchase${count === 1 ? " has" : "s have"} savings ready`;
   }
 
   const trackingCount = purchases.filter(
@@ -138,7 +175,7 @@ export function getSummaryMessage(purchases: PurchaseListItem[]): string {
   ).length;
 
   if (trackingCount > 0) {
-    return `${trackingCount} purchase${trackingCount === 1 ? "" : "s"} being tracked`;
+    return `${trackingCount} purchase${trackingCount === 1 ? " is" : "s"} being tracked`;
   }
 
   return "All caught up";
@@ -153,37 +190,19 @@ export type SortOption =
   | "merchant_name";
 
 export function calculateUrgencyScore(purchase: PurchaseListItem): number {
-  // Higher score = more urgent
   let score = 0;
-
-  // Window closing gets highest priority
-  if (purchase.status === "window_closing") {
-    score += 1000;
-  }
-
-  // Needs review gets high priority
-  if (purchase.status === "needs_review") {
-    score += 800;
-  }
-
-  // Deal found gets medium-high priority
-  if (purchase.status === "deal_found") {
-    score += 600;
-  }
-
-  // Time remaining (less time = higher score)
+  if (purchase.status === "window_closing") score += 1000;
+  if (purchase.status === "needs_review") score += 800;
+  if (purchase.status === "deal_found") score += 600;
   if (purchase.cancellation_window_remaining !== undefined) {
     const hoursRemaining = purchase.cancellation_window_remaining / 3600;
     if (hoursRemaining > 0 && hoursRemaining < 24) {
-      score += 500 - hoursRemaining * 10; // More urgent as time runs out
+      score += 500 - hoursRemaining * 10;
     }
   }
-
-  // Issues increase urgency
   if (purchase.issues && purchase.issues.length > 0) {
     score += purchase.issues.length * 50;
   }
-
   return score;
 }
 
@@ -192,70 +211,47 @@ export function sortPurchases(
   sort: SortOption
 ): PurchaseListItem[] {
   const sorted = [...purchases];
-
   switch (sort) {
     case "urgency":
-      return sorted.sort((a, b) => {
-        const scoreA = calculateUrgencyScore(a);
-        const scoreB = calculateUrgencyScore(b);
-        return scoreB - scoreA; // Higher score first
-      });
-
+      return sorted.sort(
+        (a, b) => calculateUrgencyScore(b) - calculateUrgencyScore(a)
+      );
     case "biggest_savings":
-      return sorted.sort((a, b) => {
-        const savingsA = a.best_deal_summary?.best_net_savings ?? 0;
-        const savingsB = b.best_deal_summary?.best_net_savings ?? 0;
-        return savingsB - savingsA; // Higher savings first
-      });
-
+      return sorted.sort(
+        (a, b) =>
+          (b.best_deal_summary?.best_net_savings ?? 0) -
+          (a.best_deal_summary?.best_net_savings ?? 0)
+      );
     case "most_recent":
-      return sorted.sort((a, b) => {
-        const timeA = new Date(a.purchase_time).getTime();
-        const timeB = new Date(b.purchase_time).getTime();
-        return timeB - timeA; // More recent first
-      });
-
+      return sorted.sort(
+        (a, b) =>
+          new Date(b.purchase_time).getTime() -
+          new Date(a.purchase_time).getTime()
+      );
     case "merchant_name":
-      return sorted.sort((a, b) => {
-        return a.merchant.localeCompare(b.merchant);
-      });
-
+      return sorted.sort((a, b) => a.merchant.localeCompare(b.merchant));
     default:
       return sorted;
   }
 }
 
-// ---------- Search Utilities ----------
+// ---------- Search ----------
 
 export function searchPurchases(
   purchases: PurchaseListItem[],
   query: string
 ): PurchaseListItem[] {
-  if (!query.trim()) {
-    return purchases;
-  }
-
+  if (!query.trim()) return purchases;
   const lowerQuery = query.toLowerCase().trim();
-
   return purchases.filter((purchase) => {
-    // Match merchant name
-    if (purchase.merchant.toLowerCase().includes(lowerQuery)) {
+    if (purchase.merchant.toLowerCase().includes(lowerQuery)) return true;
+    if (purchase.primary_item_title.toLowerCase().includes(lowerQuery))
       return true;
-    }
-
-    // Match primary item title
-    if (purchase.primary_item_title.toLowerCase().includes(lowerQuery)) {
-      return true;
-    }
-
-    // Match order ID
     if (
       purchase.order_id &&
       purchase.order_id.toLowerCase().includes(lowerQuery)
-    ) {
+    )
       return true;
-    }
-
     return false;
   });
 }
@@ -270,11 +266,7 @@ export function shouldMarkAsWindowClosing(
   if (purchase.status === "expired" || purchase.status === "swap_completed") {
     return false;
   }
-
-  if (purchase.cancellation_window_remaining === undefined) {
-    return false;
-  }
-
+  if (purchase.cancellation_window_remaining === undefined) return false;
   const hoursRemaining = purchase.cancellation_window_remaining / 3600;
   return hoursRemaining > 0 && hoursRemaining < WINDOW_CLOSING_THRESHOLD_HOURS;
 }
