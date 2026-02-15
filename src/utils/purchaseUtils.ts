@@ -1,7 +1,6 @@
 import {
   PurchaseListItem,
-  PurchaseStatus,
-  PurchaseIssue
+  PurchaseStatus
 } from "../types/purchase";
 
 // ---------- Formatting Utilities ----------
@@ -92,12 +91,16 @@ export function getStatusColorClass(status: PurchaseStatus): string {
 
 export type FilterOption =
   | "all"
-  | "window_closing"
-  | "deal_found"
-  | "in_progress"
-  | "completed"
-  | "needs_review"
-  | "paused";
+  | "savings_found"
+  | "tracking"
+  | "done";
+
+const filterStatusGroups: Record<FilterOption, PurchaseStatus[]> = {
+  all: [],
+  savings_found: ["deal_found", "window_closing"],
+  tracking: ["monitoring", "swap_in_progress"],
+  done: ["swap_completed", "expired", "paused", "needs_review"]
+};
 
 export function filterPurchases(
   purchases: PurchaseListItem[],
@@ -106,22 +109,39 @@ export function filterPurchases(
   if (filter === "all") {
     return purchases;
   }
+  const statuses = filterStatusGroups[filter];
+  return purchases.filter((p) => statuses.includes(p.status));
+}
 
-  const statusMap: Record<FilterOption, PurchaseStatus | PurchaseStatus[]> = {
-    all: "monitoring", // unused
-    window_closing: "window_closing",
-    deal_found: "deal_found",
-    in_progress: "swap_in_progress",
-    completed: "swap_completed",
-    needs_review: "needs_review",
-    paused: "paused"
-  };
+export function countByFilter(
+  purchases: PurchaseListItem[],
+  filter: FilterOption
+): number {
+  if (filter === "all") return purchases.length;
+  const statuses = filterStatusGroups[filter];
+  return purchases.filter((p) => statuses.includes(p.status)).length;
+}
 
-  const targetStatus = statusMap[filter];
-  if (Array.isArray(targetStatus)) {
-    return purchases.filter((p) => targetStatus.includes(p.status));
+// ---------- Summary Message ----------
+
+export function getSummaryMessage(purchases: PurchaseListItem[]): string {
+  const savingsCount = purchases.filter(
+    (p) => p.status === "deal_found" || p.status === "window_closing"
+  ).length;
+
+  if (savingsCount > 0) {
+    return `${savingsCount} purchase${savingsCount === 1 ? " has" : "s have"} savings ready`;
   }
-  return purchases.filter((p) => p.status === targetStatus);
+
+  const trackingCount = purchases.filter(
+    (p) => p.status === "monitoring" || p.status === "swap_in_progress"
+  ).length;
+
+  if (trackingCount > 0) {
+    return `${trackingCount} purchase${trackingCount === 1 ? "" : "s"} being tracked`;
+  }
+
+  return "All caught up";
 }
 
 // ---------- Sort Utilities ----------

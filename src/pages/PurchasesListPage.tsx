@@ -4,15 +4,13 @@ import { PurchaseListItem } from "../types/purchase";
 import { MOCK_PURCHASES } from "../data/mockPurchases";
 import {
   formatCurrency,
-  formatDateTime,
   formatTimeRemainingFromSeconds,
-  getStatusLabel,
-  getStatusColorClass,
   filterPurchases,
   sortPurchases,
   searchPurchases,
-  FilterOption as FilterType,
-  SortOption as SortType
+  countByFilter,
+  getSummaryMessage,
+  FilterOption as FilterType
 } from "../utils/purchaseUtils";
 
 export const PurchasesListPage: React.FC = () => {
@@ -27,14 +25,11 @@ export const PurchasesListPage: React.FC = () => {
   const [activeFilter, setActiveFilter] = useState<FilterType>(
     (searchParams.get("filter") as FilterType) || "all"
   );
-  const [sortOption, setSortOption] = useState<SortType>(
-    (searchParams.get("sort") as SortType) || "urgency"
-  );
   const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Debounce search (only updates debouncedSearch state, not URL)
+  // Debounce search
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchQuery);
@@ -42,50 +37,47 @@ export const PurchasesListPage: React.FC = () => {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Update URL params when filter/sort/debouncedSearch changes
-  // This single effect consolidates all URL param updates to avoid race conditions
+  // Update URL params
   useEffect(() => {
     const params = new URLSearchParams();
     if (debouncedSearch) params.set("q", debouncedSearch);
     if (activeFilter !== "all") params.set("filter", activeFilter);
-    if (sortOption !== "urgency") params.set("sort", sortOption);
     setSearchParams(params, { replace: true });
-  }, [activeFilter, sortOption, debouncedSearch, setSearchParams]);
+  }, [activeFilter, debouncedSearch, setSearchParams]);
 
-  // Filter, search, and sort purchases
+  // Filter, search, and sort (always urgency sort)
   const filteredPurchases = useMemo(() => {
     let result = purchases;
     result = filterPurchases(result, activeFilter);
     result = searchPurchases(result, debouncedSearch);
-    result = sortPurchases(result, sortOption);
+    result = sortPurchases(result, "urgency");
     return result;
-  }, [purchases, activeFilter, debouncedSearch, sortOption]);
+  }, [purchases, activeFilter, debouncedSearch]);
 
-  // Calculate stats
-  const stats = useMemo(() => {
-    const monitoring = purchases.filter((p) => p.status === "monitoring")
-      .length;
-    const dealsFound = purchases.filter((p) => p.status === "deal_found")
-      .length;
-    const windowClosing = purchases.filter(
-      (p) => p.status === "window_closing"
-    ).length;
-    return { monitoring, dealsFound, windowClosing };
-  }, [purchases]);
+  // Filter counts (computed from full list, not filtered)
+  const filterCounts = useMemo(
+    () => ({
+      all: countByFilter(purchases, "all"),
+      savings_found: countByFilter(purchases, "savings_found"),
+      tracking: countByFilter(purchases, "tracking"),
+      done: countByFilter(purchases, "done")
+    }),
+    [purchases]
+  );
+
+  // Summary message for header
+  const summaryMessage = useMemo(
+    () => getSummaryMessage(purchases),
+    [purchases]
+  );
 
   // Handle card click
   const handleCardClick = useCallback(
     (purchaseId: string) => {
-      // Save scroll position and filter state
       sessionStorage.setItem("purchasesScrollY", window.scrollY.toString());
-      sessionStorage.setItem("purchasesFilter", activeFilter);
-      sessionStorage.setItem("purchasesSort", sortOption);
-      sessionStorage.setItem("purchasesSearch", debouncedSearch);
-
       navigate(`/purchase/${purchaseId}`);
-      // analytics: purchase_card_opened (include purchaseId, activeFilter)
     },
-    [navigate, activeFilter, sortOption, debouncedSearch]
+    [navigate]
   );
 
   // Restore scroll position on mount
@@ -95,15 +87,12 @@ export const PurchasesListPage: React.FC = () => {
       window.scrollTo(0, parseInt(savedScrollY, 10));
       sessionStorage.removeItem("purchasesScrollY");
     }
-    // analytics: purchases_list_viewed
   }, []);
 
   // Handle pause/resume
   const handlePauseResume = useCallback(
     (purchaseId: string, currentStatus: string) => {
-      // TODO: API call to pause/resume
       const newStatus = currentStatus === "paused" ? "monitoring" : "paused";
-      // analytics: currentStatus === "paused" ? purchase_resumed : purchase_paused
       console.log(`Toggle monitoring for ${purchaseId}: ${newStatus}`);
     },
     []
@@ -111,35 +100,31 @@ export const PurchasesListPage: React.FC = () => {
 
   // Handle delete
   const handleDelete = useCallback((purchaseId: string) => {
-    // TODO: API call to delete
     console.log(`Delete purchase ${purchaseId}`);
   }, []);
 
   // Handle hide
   const handleHide = useCallback((purchaseId: string) => {
-    // TODO: API call to hide
     console.log(`Hide purchase ${purchaseId}`);
   }, []);
 
   // Handle report issue
   const handleReportIssue = useCallback((purchaseId: string) => {
-    // TODO: Open issue reporting flow
     console.log(`Report issue for ${purchaseId}`);
   }, []);
 
   return (
     <div className="purchases-page">
       <Header
-        stats={stats}
+        summaryMessage={summaryMessage}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
       />
 
-      <FiltersAndSort
+      <Filters
         activeFilter={activeFilter}
         onFilterChange={setActiveFilter}
-        sortOption={sortOption}
-        onSortChange={setSortOption}
+        counts={filterCounts}
       />
 
       {loading ? (
@@ -165,131 +150,78 @@ export const PurchasesListPage: React.FC = () => {
   );
 };
 
-// ---------- Header Component ----------
+// ---------- Header ----------
 
 interface HeaderProps {
-  stats: { monitoring: number; dealsFound: number; windowClosing: number };
+  summaryMessage: string;
   searchQuery: string;
   onSearchChange: (query: string) => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
-  stats,
+  summaryMessage,
   searchQuery,
   onSearchChange
-}) => {
-  return (
-    <header className="purchases-header">
-      <div className="purchases-header-top">
-        <h1 className="purchases-title">Purchases</h1>
-        <button type="button" className="btn-ghost settings-btn">
-          Settings
-        </button>
+}) => (
+  <header className="purchases-header">
+    <div className="purchases-header-top">
+      <div>
+        <h1 className="purchases-title">Your Purchases</h1>
+        <p className="purchases-subtitle">{summaryMessage}</p>
       </div>
+      <button type="button" className="icon-button settings-btn" aria-label="Settings">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="10" cy="10" r="3" />
+          <path d="M10 1.5v2M10 16.5v2M3.4 3.4l1.4 1.4M15.2 15.2l1.4 1.4M1.5 10h2M16.5 10h2M3.4 16.6l1.4-1.4M15.2 4.8l1.4-1.4" />
+        </svg>
+      </button>
+    </div>
 
-      <div className="purchases-stats">
-        <div className="stat-item">
-          <span className="stat-label">Monitoring</span>
-          <span className="stat-value">{stats.monitoring}</span>
-        </div>
-        <div className="stat-item">
-          <span className="stat-label">Deals Found</span>
-          <span className="stat-value">{stats.dealsFound}</span>
-        </div>
-        <div className="stat-item">
-          <span className="stat-label">Window Closing</span>
-          <span className="stat-value">{stats.windowClosing}</span>
-        </div>
-      </div>
+    <div className="purchases-search">
+      <input
+        type="search"
+        placeholder="Search purchases..."
+        value={searchQuery}
+        onChange={(e) => onSearchChange(e.target.value)}
+        className="search-input"
+      />
+    </div>
+  </header>
+);
 
-      <div className="purchases-search">
-        <input
-          type="search"
-          placeholder="Search by merchant, item, or order ID..."
-          value={searchQuery}
-          onChange={(e) => {
-            onSearchChange(e.target.value);
-            // analytics: search_used (on submit/debounce)
-          }}
-          className="search-input"
-        />
-      </div>
-    </header>
-  );
-};
+// ---------- Filters ----------
 
-// ---------- Filters and Sort Component ----------
-
-interface FiltersAndSortProps {
+interface FiltersProps {
   activeFilter: FilterType;
   onFilterChange: (filter: FilterType) => void;
-  sortOption: SortType;
-  onSortChange: (sort: SortType) => void;
+  counts: Record<FilterType, number>;
 }
 
-const FiltersAndSort: React.FC<FiltersAndSortProps> = ({
+const Filters: React.FC<FiltersProps> = ({
   activeFilter,
   onFilterChange,
-  sortOption,
-  onSortChange
+  counts
 }) => {
   const filters: { value: FilterType; label: string }[] = [
     { value: "all", label: "All" },
-    { value: "window_closing", label: "Window Closing" },
-    { value: "deal_found", label: "Deals Found" },
-    { value: "in_progress", label: "In Progress" },
-    { value: "completed", label: "Completed" },
-    { value: "needs_review", label: "Needs Review" },
-    { value: "paused", label: "Paused" }
-  ];
-
-  const sortOptions: { value: SortType; label: string }[] = [
-    { value: "urgency", label: "Urgency" },
-    { value: "biggest_savings", label: "Biggest Savings" },
-    { value: "most_recent", label: "Most Recent" },
-    { value: "merchant_name", label: "Merchant Name" }
+    { value: "savings_found", label: "Savings found" },
+    { value: "tracking", label: "Tracking" },
+    { value: "done", label: "Completed" }
   ];
 
   return (
-    <div className="filters-and-sort">
-      <div className="filter-chips">
-        {filters.map((filter) => (
-          <button
-            key={filter.value}
-            type="button"
-            className={`filter-chip ${
-              activeFilter === filter.value ? "filter-chip-active" : ""
-            }`}
-            onClick={() => {
-              onFilterChange(filter.value);
-              // analytics: filter_applied (include filter.value)
-            }}
-          >
-            {filter.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="sort-control">
-        <label htmlFor="sort-select" className="sort-label">
-          Sort:
-        </label>
-        <select
-          id="sort-select"
-          value={sortOption}
-          onChange={(e) => {
-            onSortChange(e.target.value as SortType);
-            // analytics: sort_changed (include e.target.value)
-          }}
-          className="sort-select"
+    <div className="filters-bar">
+      {filters.map((f) => (
+        <button
+          key={f.value}
+          type="button"
+          className={`filter-chip ${activeFilter === f.value ? "filter-chip-active" : ""}`}
+          onClick={() => onFilterChange(f.value)}
         >
-          {sortOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </div>
+          {f.label}
+          <span className="filter-count">{counts[f.value]}</span>
+        </button>
+      ))}
     </div>
   );
 };
@@ -312,25 +244,25 @@ const PurchaseCardsGrid: React.FC<PurchaseCardsGridProps> = ({
   onDelete,
   onHide,
   onReportIssue
-}) => {
-  return (
-    <div className="purchase-cards-grid">
-      {purchases.map((purchase) => (
-        <PurchaseCard
-          key={purchase.purchase_id}
-          purchase={purchase}
-          onClick={() => onCardClick(purchase.purchase_id)}
-          onPauseResume={() => onPauseResume(purchase.purchase_id, purchase.status)}
-          onDelete={() => onDelete(purchase.purchase_id)}
-          onHide={() => onHide(purchase.purchase_id)}
-          onReportIssue={() => onReportIssue(purchase.purchase_id)}
-        />
-      ))}
-    </div>
-  );
-};
+}) => (
+  <div className="purchase-cards-grid">
+    {purchases.map((purchase) => (
+      <PurchaseCard
+        key={purchase.purchase_id}
+        purchase={purchase}
+        onClick={() => onCardClick(purchase.purchase_id)}
+        onPauseResume={() =>
+          onPauseResume(purchase.purchase_id, purchase.status)
+        }
+        onDelete={() => onDelete(purchase.purchase_id)}
+        onHide={() => onHide(purchase.purchase_id)}
+        onReportIssue={() => onReportIssue(purchase.purchase_id)}
+      />
+    ))}
+  </div>
+);
 
-// ---------- Purchase Card Component ----------
+// ---------- Purchase Card ----------
 
 interface PurchaseCardProps {
   purchase: PurchaseListItem;
@@ -351,38 +283,49 @@ const PurchaseCard: React.FC<PurchaseCardProps> = ({
 }) => {
   const [menuOpen, setMenuOpen] = useState(false);
 
+  const isPaused = purchase.status === "paused";
+  const isExpired = purchase.status === "expired";
+  const isCompleted = purchase.status === "swap_completed";
+  const isDealFound =
+    purchase.status === "deal_found" || purchase.status === "window_closing";
+  const isSwapping = purchase.status === "swap_in_progress";
+
+  // Urgency: show time remaining only when it's relevant and < 24h
   const timeRemaining = formatTimeRemainingFromSeconds(
     purchase.cancellation_window_remaining
   );
+  const showUrgency =
+    !timeRemaining.expired &&
+    timeRemaining.label !== "Window unknown" &&
+    purchase.cancellation_window_remaining !== undefined &&
+    purchase.cancellation_window_remaining > 0 &&
+    purchase.cancellation_window_remaining < 24 * 3600;
 
-  const isExpired = purchase.status === "expired";
-  const isCompleted = purchase.status === "swap_completed";
-  const isNeedsReview = purchase.status === "needs_review";
-  const isPaused = purchase.status === "paused";
+  // Card accent class
+  const accentClass = isDealFound
+    ? "card-accent-green"
+    : showUrgency
+    ? "card-accent-amber"
+    : isCompleted
+    ? "card-accent-cyan"
+    : isExpired || isPaused
+    ? "card-accent-muted"
+    : "";
 
-  const ctaText = isCompleted
-    ? "View summary"
-    : isExpired
-    ? "View details"
-    : "View swap deals";
+  const itemTitle =
+    purchase.item_count && purchase.item_count > 1
+      ? `Order with ${purchase.item_count} items`
+      : purchase.primary_item_title;
 
   return (
     <article
-      className={`purchase-card ${
-        isNeedsReview ? "purchase-card-needs-review" : ""
-      } ${isExpired ? "purchase-card-expired" : ""} ${
-        isCompleted ? "purchase-card-completed" : ""
-      }`}
+      className={`purchase-card ${accentClass}`}
       onClick={onClick}
     >
-      <div className="purchase-card-header">
-        <div className="purchase-card-merchant">
-          <div className="merchant-logo-placeholder">
-            {purchase.merchant.charAt(0)}
-          </div>
-          <div className="merchant-name">{purchase.merchant}</div>
-        </div>
-        <div className="purchase-card-actions">
+      {/* Row 1: Item name + menu */}
+      <div className="card-row-top">
+        <h3 className="card-title">{itemTitle}</h3>
+        <div className="card-menu-wrapper">
           <button
             type="button"
             className="icon-button menu-button"
@@ -390,159 +333,159 @@ const PurchaseCard: React.FC<PurchaseCardProps> = ({
               e.stopPropagation();
               setMenuOpen(!menuOpen);
             }}
+            aria-label="More actions"
           >
-            ⋯
+            ···
           </button>
           {menuOpen && (
-            <div className="card-menu">
-              <button
-                type="button"
-                className="menu-item"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onPauseResume();
-                  setMenuOpen(false);
-                }}
-              >
-                {isPaused ? "Resume monitoring" : "Pause monitoring"}
-              </button>
-              <button
-                type="button"
-                className="menu-item"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onHide();
-                  setMenuOpen(false);
-                }}
-              >
-                Hide purchase
-              </button>
-              <button
-                type="button"
-                className="menu-item"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete();
-                  setMenuOpen(false);
-                }}
-              >
-                Delete record
-              </button>
-              <button
-                type="button"
-                className="menu-item"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onReportIssue();
-                  setMenuOpen(false);
-                }}
-              >
-                Report issue
-              </button>
-            </div>
+            <CardMenu
+              isPaused={isPaused}
+              onPauseResume={() => {
+                onPauseResume();
+                setMenuOpen(false);
+              }}
+              onHide={() => {
+                onHide();
+                setMenuOpen(false);
+              }}
+              onDelete={() => {
+                onDelete();
+                setMenuOpen(false);
+              }}
+              onReportIssue={() => {
+                onReportIssue();
+                setMenuOpen(false);
+              }}
+            />
           )}
         </div>
       </div>
 
-      <div className="purchase-card-status">
-        <span
-          className={`status-badge ${getStatusColorClass(purchase.status)}`}
-        >
-          {getStatusLabel(purchase.status)}
+      {/* Row 2: Merchant + price */}
+      <div className="card-meta">
+        <span className="card-merchant">{purchase.merchant}</span>
+        <span className="card-price">
+          {formatCurrency(purchase.total_paid, purchase.currency, "US")}
         </span>
       </div>
 
-      <div className="purchase-card-content">
-        <h3 className="purchase-card-title">
-          {purchase.item_count && purchase.item_count > 1
-            ? `Order with ${purchase.item_count} items`
-            : purchase.primary_item_title}
-        </h3>
-
-        <div className="purchase-card-meta">
-          <div className="meta-row">
-            <span className="meta-label">Total paid</span>
-            <span className="meta-value">
-              {formatCurrency(purchase.total_paid, purchase.currency, "US")}
-            </span>
-          </div>
-          <div className="meta-row">
-            <span className="meta-label">Purchased</span>
-            <span className="meta-value">
-              {formatDateTime(purchase.purchase_time)}
-            </span>
-          </div>
-          {timeRemaining.label !== "Window unknown" && (
-            <div className="meta-row">
-              <span className="meta-label">Cancellation window</span>
-              <span className="meta-value">
-                {timeRemaining.label}
-                {purchase.cancellation_window_estimated && (
-                  <span className="estimated-badge">Estimated</span>
-                )}
-              </span>
-            </div>
-          )}
-        </div>
-
-        <div className="purchase-card-savings">
-          {isPaused ? (
-            <div className="savings-status">Monitoring paused</div>
-          ) : purchase.best_deal_summary ? (
-            <div className="savings-found">
-              <div className="savings-amount">
-                Save{" "}
-                {formatCurrency(
-                  purchase.best_deal_summary.best_net_savings,
-                  purchase.currency,
-                  "US"
-                )}{" "}
-                ({purchase.best_deal_summary.best_savings_pct.toFixed(1)}%)
-              </div>
-              <div className="savings-meta">
-                Last scan: {formatDateTime(purchase.best_deal_summary.last_scan_at)}
-              </div>
-            </div>
-          ) : (
-            <div className="savings-scanning">
-              <div>No better deal yet</div>
-              <div className="scanning-indicator">Scanning...</div>
-            </div>
-          )}
-        </div>
+      {/* Row 3: Savings / status hero */}
+      <div className="card-hero">
+        <CardHero purchase={purchase} />
       </div>
 
-      <div className="purchase-card-footer">
-        <button
-          type="button"
-          className="btn-primary card-cta"
-          onClick={(e) => {
-            e.stopPropagation();
-            onClick();
-          }}
-        >
-          {ctaText}
-        </button>
-      </div>
+      {/* Row 4: Urgency nudge (conditional) */}
+      {showUrgency && (
+        <div className="card-urgency">
+          {timeRemaining.label} left to swap
+        </div>
+      )}
     </article>
   );
 };
 
-// ---------- Skeleton Loading State ----------
+// ---------- Card Hero (savings / status row) ----------
 
-const PurchaseCardsSkeleton: React.FC = () => {
+const CardHero: React.FC<{ purchase: PurchaseListItem }> = ({ purchase }) => {
+  if (purchase.status === "paused") {
+    return <span className="hero-muted">Paused</span>;
+  }
+
+  if (purchase.status === "expired") {
+    return <span className="hero-muted">Window expired</span>;
+  }
+
+  if (purchase.status === "swap_completed" && purchase.best_deal_summary) {
+    return (
+      <span className="hero-saved">
+        Saved{" "}
+        {formatCurrency(
+          purchase.best_deal_summary.best_net_savings,
+          purchase.currency,
+          "US"
+        )}
+      </span>
+    );
+  }
+
+  if (purchase.status === "needs_review") {
+    return <span className="hero-review">Needs your review</span>;
+  }
+
+  if (purchase.status === "swap_in_progress") {
+    return <span className="hero-progress">Swap in progress</span>;
+  }
+
+  if (purchase.best_deal_summary) {
+    return (
+      <span className="hero-savings">
+        Save{" "}
+        {formatCurrency(
+          purchase.best_deal_summary.best_net_savings,
+          purchase.currency,
+          "US"
+        )}{" "}
+        ({purchase.best_deal_summary.best_savings_pct.toFixed(0)}%)
+      </span>
+    );
+  }
+
   return (
-    <div className="purchase-cards-grid">
-      {[1, 2, 3, 4, 5, 6].map((i) => (
-        <div key={i} className="purchase-card skeleton">
-          <div className="skeleton-header" />
-          <div className="skeleton-content" />
-          <div className="skeleton-footer" />
-        </div>
-      ))}
-    </div>
+    <span className="hero-scanning">
+      Scanning for deals<span className="scanning-dots">...</span>
+    </span>
   );
 };
+
+// ---------- Card Menu ----------
+
+interface CardMenuProps {
+  isPaused: boolean;
+  onPauseResume: () => void;
+  onHide: () => void;
+  onDelete: () => void;
+  onReportIssue: () => void;
+}
+
+const CardMenu: React.FC<CardMenuProps> = ({
+  isPaused,
+  onPauseResume,
+  onHide,
+  onDelete,
+  onReportIssue
+}) => (
+  <div
+    className="card-menu"
+    onClick={(e) => e.stopPropagation()}
+  >
+    <button type="button" className="menu-item" onClick={onPauseResume}>
+      {isPaused ? "Resume monitoring" : "Pause monitoring"}
+    </button>
+    <button type="button" className="menu-item" onClick={onHide}>
+      Hide purchase
+    </button>
+    <button type="button" className="menu-item" onClick={onDelete}>
+      Delete record
+    </button>
+    <button type="button" className="menu-item" onClick={onReportIssue}>
+      Report issue
+    </button>
+  </div>
+);
+
+// ---------- Skeleton Loading ----------
+
+const PurchaseCardsSkeleton: React.FC = () => (
+  <div className="purchase-cards-grid">
+    {[1, 2, 3, 4, 5, 6].map((i) => (
+      <div key={i} className="purchase-card skeleton">
+        <div className="skeleton-line skeleton-title" />
+        <div className="skeleton-line skeleton-meta" />
+        <div className="skeleton-line skeleton-hero" />
+      </div>
+    ))}
+  </div>
+);
 
 // ---------- Empty State ----------
 
@@ -551,24 +494,18 @@ interface EmptyStateProps {
   hasFilter: boolean;
 }
 
-const EmptyState: React.FC<EmptyStateProps> = ({ hasSearch, hasFilter }) => {
-  return (
-    <div className="empty-state">
-      <h2>No purchases found</h2>
-      {hasSearch || hasFilter ? (
-        <p>Try adjusting your search or filter to see more results.</p>
-      ) : (
-        <>
-          <p>No purchases yet.</p>
-          <p>
-            Connect your email account or forward purchase receipts to get
-            started with AfterSave.
-          </p>
-        </>
-      )}
-    </div>
-  );
-};
+const EmptyState: React.FC<EmptyStateProps> = ({ hasSearch, hasFilter }) => (
+  <div className="empty-state">
+    <h2>No purchases found</h2>
+    {hasSearch || hasFilter ? (
+      <p>Try adjusting your search or filters.</p>
+    ) : (
+      <p>
+        Connect your email or forward receipts to start saving with AfterSave.
+      </p>
+    )}
+  </div>
+);
 
 // ---------- Error State ----------
 
@@ -577,14 +514,12 @@ interface ErrorStateProps {
   onRetry: () => void;
 }
 
-const ErrorState: React.FC<ErrorStateProps> = ({ error, onRetry }) => {
-  return (
-    <div className="error-state">
-      <h2>Something went wrong</h2>
-      <p>{error}</p>
-      <button type="button" className="btn-primary" onClick={onRetry}>
-        Retry
-      </button>
-    </div>
-  );
-};
+const ErrorState: React.FC<ErrorStateProps> = ({ error, onRetry }) => (
+  <div className="error-state">
+    <h2>Something went wrong</h2>
+    <p>{error}</p>
+    <button type="button" className="btn-primary" onClick={onRetry}>
+      Retry
+    </button>
+  </div>
+);
