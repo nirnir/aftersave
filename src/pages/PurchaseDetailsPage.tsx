@@ -1,84 +1,33 @@
 import React, { useMemo, useState } from "react";
+import { useParams } from "react-router-dom";
+import {
+  MatchTier,
+  Purchase,
+  PurchaseItem,
+  Deal,
+  AuditEvent,
+  ExecutionMode,
+  Coupon
+} from "../types/purchase";
 
-// ---------- Data Contracts (aligned with ProductRequirements) ----------
+// Re-export types for backward compatibility
+export type {
+  MatchTier,
+  Purchase,
+  PurchaseItem,
+  Deal,
+  AuditEvent,
+  ExecutionMode,
+  Coupon
+};
 
-export type MatchTier = "Exact" | "Attribute" | "Similar";
-
-export type SwapStatus =
+type SwapStatus =
   | "Monitoring"
   | "DealFound"
   | "WindowClosing"
   | "SwapInProgress"
   | "Completed"
   | "Expired";
-
-export type ExecutionMode = "Manual" | "SemiAutomated";
-
-export interface PurchaseItem {
-  title: string;
-  attributes: Record<string, string>;
-  quantity: number;
-  price: number;
-}
-
-export interface Purchase {
-  purchase_id: string;
-  merchant: string;
-  order_id: string;
-  purchase_time: string;
-  country: string;
-  currency: string;
-  items: PurchaseItem[];
-  delivery_estimate: string;
-  cancellation_window: {
-    end: string;
-    inferred: boolean;
-  };
-  extraction_confidence_score: number; // 0–1
-  monitoring_enabled: boolean;
-  last_scan_at?: string;
-}
-
-export interface Coupon {
-  code: string;
-  auto_apply_flag: boolean;
-}
-
-export interface Deal {
-  deal_id: string;
-  merchant_or_seller: string;
-  listing_url: string;
-  match_tier: MatchTier;
-  base_price: number;
-  shipping: number;
-  tax_estimate: number;
-  total_price: number;
-  delivery_estimate: string;
-  return_policy_summary?: string;
-  coupon?: Coupon;
-  reliability_score: number; // 0–1
-  net_savings: number;
-  savings_percentage: number;
-  last_checked_at: string;
-  in_stock_flag: boolean;
-  stock_confidence: number; // 0–1
-  cross_border?: boolean;
-}
-
-export interface AuditEvent {
-  id: string;
-  type:
-    | "purchase_detected"
-    | "data_extracted"
-    | "deals_evaluated"
-    | "recommendation_generated"
-    | "swap_step"
-    | "swap_completed"
-    | "failure";
-  timestamp: string;
-  label: string;
-  detail?: string;
-}
 
 // ---------- Mock Data (placeholder until wired to backend) ----------
 
@@ -222,12 +171,10 @@ function calculateTimeRemaining(endIso: string) {
 
 // ---------- Page ----------
 
-interface PurchaseDetailsPageProps {
-  purchaseId: string;
-}
-
-export const PurchaseDetailsPage: React.FC<PurchaseDetailsPageProps> = () => {
+export const PurchaseDetailsPage: React.FC = () => {
+  const { purchaseId } = useParams<{ purchaseId: string }>();
   // In V1 this page is backed by concrete data; here we wire mock data.
+  // TODO: Load purchase by purchaseId from API
   const purchase = MOCK_PURCHASE;
   const deals = MOCK_DEALS;
 
