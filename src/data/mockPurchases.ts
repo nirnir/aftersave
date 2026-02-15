@@ -3,7 +3,7 @@ import { PurchaseListItem } from "../types/purchase";
 export const MOCK_PURCHASES: PurchaseListItem[] = [
   {
     purchase_id: "purchase-1",
-    merchant: "Example Store",
+    merchant: "Walmart",
     primary_item_title: "Noise Cancelling Headphones",
     purchase_time: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
     currency: "USD",
@@ -16,6 +16,7 @@ export const MOCK_PURCHASES: PurchaseListItem[] = [
       best_net_savings: 30.0,
       best_savings_pct: 10.0,
       best_deal_total_price: 269.99,
+      best_deal_merchant: "Amazon",
       last_scan_at: new Date(Date.now() - 10 * 60 * 1000).toISOString()
     },
     order_id: "ORDER-12345"
@@ -28,13 +29,14 @@ export const MOCK_PURCHASES: PurchaseListItem[] = [
     currency: "USD",
     total_paid: 549.99,
     delivery_estimate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-    cancellation_window_remaining: 18 * 60 * 60, // 18 hours - window closing
+    cancellation_window_remaining: 18 * 60 * 60, // 18 hours
     cancellation_window_estimated: false,
     status: "window_closing",
     best_deal_summary: {
       best_net_savings: 45.5,
       best_savings_pct: 8.3,
       best_deal_total_price: 504.49,
+      best_deal_merchant: "Best Buy",
       last_scan_at: new Date(Date.now() - 30 * 60 * 1000).toISOString()
     },
     order_id: "ORDER-67890",
@@ -62,7 +64,7 @@ export const MOCK_PURCHASES: PurchaseListItem[] = [
     currency: "USD",
     total_paid: 399.99,
     delivery_estimate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString(),
-    cancellation_window_remaining: 0, // Expired
+    cancellation_window_remaining: 0,
     cancellation_window_estimated: false,
     status: "expired",
     order_id: "ORDER-22222"
@@ -75,13 +77,14 @@ export const MOCK_PURCHASES: PurchaseListItem[] = [
     currency: "USD",
     total_paid: 89.99,
     delivery_estimate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString(),
-    cancellation_window_remaining: 72 * 60 * 60, // 72 hours
+    cancellation_window_remaining: 72 * 60 * 60,
     cancellation_window_estimated: false,
     status: "swap_in_progress",
     best_deal_summary: {
       best_net_savings: 15.0,
       best_savings_pct: 16.7,
       best_deal_total_price: 74.99,
+      best_deal_merchant: "Target",
       last_scan_at: new Date(Date.now() - 5 * 60 * 1000).toISOString()
     },
     order_id: "ORDER-33333"
@@ -101,6 +104,7 @@ export const MOCK_PURCHASES: PurchaseListItem[] = [
       best_net_savings: 25.0,
       best_savings_pct: 20.0,
       best_deal_total_price: 99.99,
+      best_deal_merchant: "Amazon",
       last_scan_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString()
     },
     order_id: "ORDER-44444",
@@ -114,7 +118,7 @@ export const MOCK_PURCHASES: PurchaseListItem[] = [
     currency: "USD",
     total_paid: 129.99,
     delivery_estimate: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString(),
-    cancellation_window_remaining: 36 * 60 * 60, // 36 hours
+    cancellation_window_remaining: 36 * 60 * 60,
     cancellation_window_estimated: false,
     status: "needs_review",
     issues: ["low_confidence", "missing_order_id"],
@@ -128,7 +132,7 @@ export const MOCK_PURCHASES: PurchaseListItem[] = [
     currency: "USD",
     total_paid: 79.99,
     delivery_estimate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-    cancellation_window_remaining: 96 * 60 * 60, // 96 hours
+    cancellation_window_remaining: 96 * 60 * 60,
     cancellation_window_estimated: false,
     status: "paused",
     order_id: "ORDER-66666"
@@ -141,13 +145,14 @@ export const MOCK_PURCHASES: PurchaseListItem[] = [
     currency: "USD",
     total_paid: 249.99,
     delivery_estimate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-    cancellation_window_remaining: 12 * 60 * 60, // 12 hours - window closing
+    cancellation_window_remaining: 12 * 60 * 60,
     cancellation_window_estimated: false,
     status: "deal_found",
     best_deal_summary: {
       best_net_savings: 50.0,
       best_savings_pct: 20.0,
       best_deal_total_price: 199.99,
+      best_deal_merchant: "Wayfair",
       last_scan_at: new Date(Date.now() - 15 * 60 * 1000).toISOString()
     },
     order_id: "ORDER-77777"
@@ -160,7 +165,7 @@ export const MOCK_PURCHASES: PurchaseListItem[] = [
     currency: "USD",
     total_paid: 59.99,
     delivery_estimate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-    cancellation_window_remaining: undefined, // Unknown
+    cancellation_window_remaining: undefined,
     cancellation_window_estimated: true,
     cancellation_window_confidence: 0.5,
     status: "monitoring",

@@ -32,6 +32,7 @@ export interface BestDealSummary {
   best_net_savings: number;
   best_savings_pct: number;
   best_deal_total_price: number;
+  best_deal_merchant?: string;
   last_scan_at: string;
 }
 

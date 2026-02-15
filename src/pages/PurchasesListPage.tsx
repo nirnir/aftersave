@@ -4,12 +4,14 @@ import { PurchaseListItem } from "../types/purchase";
 import { MOCK_PURCHASES } from "../data/mockPurchases";
 import {
   formatCurrency,
-  formatTimeRemainingFromSeconds,
+  formatPurchaseDate,
+  formatTimeRemainingFriendly,
+  isUrgent,
   filterPurchases,
   sortPurchases,
   searchPurchases,
   countByFilter,
-  getSummaryMessage,
+  getTotalSavings,
   FilterOption as FilterType
 } from "../utils/purchaseUtils";
 
@@ -17,7 +19,6 @@ export const PurchasesListPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // State
   const [purchases] = useState<PurchaseListItem[]>(MOCK_PURCHASES);
   const [searchQuery, setSearchQuery] = useState(
     searchParams.get("q") || ""
@@ -31,13 +32,11 @@ export const PurchasesListPage: React.FC = () => {
 
   // Debounce search
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchQuery);
-    }, 300);
+    const timer = setTimeout(() => setDebouncedSearch(searchQuery), 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Update URL params
+  // Sync URL
   useEffect(() => {
     const params = new URLSearchParams();
     if (debouncedSearch) params.set("q", debouncedSearch);
@@ -45,7 +44,6 @@ export const PurchasesListPage: React.FC = () => {
     setSearchParams(params, { replace: true });
   }, [activeFilter, debouncedSearch, setSearchParams]);
 
-  // Filter, search, and sort (always urgency sort)
   const filteredPurchases = useMemo(() => {
     let result = purchases;
     result = filterPurchases(result, activeFilter);
@@ -54,24 +52,18 @@ export const PurchasesListPage: React.FC = () => {
     return result;
   }, [purchases, activeFilter, debouncedSearch]);
 
-  // Filter counts (computed from full list, not filtered)
   const filterCounts = useMemo(
     () => ({
       all: countByFilter(purchases, "all"),
-      savings_found: countByFilter(purchases, "savings_found"),
-      tracking: countByFilter(purchases, "tracking"),
-      done: countByFilter(purchases, "done")
+      savings_available: countByFilter(purchases, "savings_available"),
+      searching: countByFilter(purchases, "searching"),
+      return_soon: countByFilter(purchases, "return_soon")
     }),
     [purchases]
   );
 
-  // Summary message for header
-  const summaryMessage = useMemo(
-    () => getSummaryMessage(purchases),
-    [purchases]
-  );
+  const totalSavings = useMemo(() => getTotalSavings(purchases), [purchases]);
 
-  // Handle card click
   const handleCardClick = useCallback(
     (purchaseId: string) => {
       sessionStorage.setItem("purchasesScrollY", window.scrollY.toString());
@@ -80,7 +72,6 @@ export const PurchasesListPage: React.FC = () => {
     [navigate]
   );
 
-  // Restore scroll position on mount
   useEffect(() => {
     const savedScrollY = sessionStorage.getItem("purchasesScrollY");
     if (savedScrollY) {
@@ -89,44 +80,62 @@ export const PurchasesListPage: React.FC = () => {
     }
   }, []);
 
-  // Handle pause/resume
-  const handlePauseResume = useCallback(
-    (purchaseId: string, currentStatus: string) => {
-      const newStatus = currentStatus === "paused" ? "monitoring" : "paused";
-      console.log(`Toggle monitoring for ${purchaseId}: ${newStatus}`);
-    },
-    []
-  );
-
-  // Handle delete
-  const handleDelete = useCallback((purchaseId: string) => {
-    console.log(`Delete purchase ${purchaseId}`);
-  }, []);
-
-  // Handle hide
-  const handleHide = useCallback((purchaseId: string) => {
-    console.log(`Hide purchase ${purchaseId}`);
-  }, []);
-
-  // Handle report issue
-  const handleReportIssue = useCallback((purchaseId: string) => {
-    console.log(`Report issue for ${purchaseId}`);
-  }, []);
-
   return (
-    <div className="purchases-page">
-      <Header
-        summaryMessage={summaryMessage}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-      />
+    <main className="purchases-page">
+      {/* Header */}
+      <div className="page-header">
+        <h1 className="page-title">Your Purchases</h1>
+        <p className="page-description">
+          We automatically track your orders and search for better prices while
+          you can still return them.
+        </p>
+      </div>
 
-      <Filters
+      {/* Savings Banner */}
+      {totalSavings.count > 0 && (
+        <div className="savings-banner">
+          <div className="savings-banner-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M12 2l2.09 6.26L20.18 9l-5 4.27L16.82 20 12 16.77 7.18 20l1.64-6.73L3.82 9l6.09-.74L12 2z" fill="#fff" />
+            </svg>
+          </div>
+          <div className="savings-banner-text">
+            <span className="savings-banner-label">GOOD NEWS!</span>
+            <span className="savings-banner-amount">
+              We found {formatCurrency(totalSavings.totalAmount, "USD", "US")}{" "}
+              in savings
+            </span>
+            <span className="savings-banner-sub">
+              on {totalSavings.count} of your recent purchases. Scroll down to
+              see the details.
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Search */}
+      <div className="purchases-search">
+        <svg className="search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round">
+          <circle cx="7" cy="7" r="5" />
+          <path d="M14 14l-3.5-3.5" />
+        </svg>
+        <input
+          type="search"
+          placeholder="Search purchases..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="search-input"
+        />
+      </div>
+
+      {/* Filter Tabs */}
+      <FilterTabs
         activeFilter={activeFilter}
         onFilterChange={setActiveFilter}
         counts={filterCounts}
       />
 
+      {/* Card List */}
       {loading ? (
         <PurchaseCardsSkeleton />
       ) : error ? (
@@ -137,351 +146,237 @@ export const PurchasesListPage: React.FC = () => {
           hasFilter={activeFilter !== "all"}
         />
       ) : (
-        <PurchaseCardsGrid
-          purchases={filteredPurchases}
-          onCardClick={handleCardClick}
-          onPauseResume={handlePauseResume}
-          onDelete={handleDelete}
-          onHide={handleHide}
-          onReportIssue={handleReportIssue}
-        />
+        <div className="card-list">
+          {filteredPurchases.map((p) => (
+            <PurchaseCard
+              key={p.purchase_id}
+              purchase={p}
+              onClick={() => handleCardClick(p.purchase_id)}
+            />
+          ))}
+        </div>
       )}
-    </div>
+    </main>
   );
 };
 
-// ---------- Header ----------
+// ---------- Filter Tabs ----------
 
-interface HeaderProps {
-  summaryMessage: string;
-  searchQuery: string;
-  onSearchChange: (query: string) => void;
-}
-
-const Header: React.FC<HeaderProps> = ({
-  summaryMessage,
-  searchQuery,
-  onSearchChange
-}) => (
-  <header className="purchases-header">
-    <div className="purchases-header-top">
-      <div>
-        <h1 className="purchases-title">Your Purchases</h1>
-        <p className="purchases-subtitle">{summaryMessage}</p>
-      </div>
-      <button type="button" className="icon-button settings-btn" aria-label="Settings">
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="10" cy="10" r="3" />
-          <path d="M10 1.5v2M10 16.5v2M3.4 3.4l1.4 1.4M15.2 15.2l1.4 1.4M1.5 10h2M16.5 10h2M3.4 16.6l1.4-1.4M15.2 4.8l1.4-1.4" />
-        </svg>
-      </button>
-    </div>
-
-    <div className="purchases-search">
-      <input
-        type="search"
-        placeholder="Search purchases..."
-        value={searchQuery}
-        onChange={(e) => onSearchChange(e.target.value)}
-        className="search-input"
-      />
-    </div>
-  </header>
-);
-
-// ---------- Filters ----------
-
-interface FiltersProps {
+interface FilterTabsProps {
   activeFilter: FilterType;
   onFilterChange: (filter: FilterType) => void;
   counts: Record<FilterType, number>;
 }
 
-const Filters: React.FC<FiltersProps> = ({
+const FilterTabs: React.FC<FilterTabsProps> = ({
   activeFilter,
   onFilterChange,
   counts
 }) => {
-  const filters: { value: FilterType; label: string }[] = [
-    { value: "all", label: "All" },
-    { value: "savings_found", label: "Savings found" },
-    { value: "tracking", label: "Tracking" },
-    { value: "done", label: "Completed" }
+  const tabs: { value: FilterType; label: string }[] = [
+    { value: "all", label: "All Purchases" },
+    { value: "savings_available", label: "Savings Available" },
+    { value: "searching", label: "Searching" },
+    { value: "return_soon", label: "Return Soon" }
   ];
 
   return (
-    <div className="filters-bar">
-      {filters.map((f) => (
+    <div className="filter-tabs">
+      {tabs.map((tab) => (
         <button
-          key={f.value}
+          key={tab.value}
           type="button"
-          className={`filter-chip ${activeFilter === f.value ? "filter-chip-active" : ""}`}
-          onClick={() => onFilterChange(f.value)}
+          className={`filter-tab ${activeFilter === tab.value ? "filter-tab-active" : ""}`}
+          onClick={() => onFilterChange(tab.value)}
         >
-          {f.label}
-          <span className="filter-count">{counts[f.value]}</span>
+          {tab.label}
+          <span className="tab-count">{counts[tab.value]}</span>
         </button>
       ))}
     </div>
   );
 };
 
-// ---------- Purchase Cards Grid ----------
-
-interface PurchaseCardsGridProps {
-  purchases: PurchaseListItem[];
-  onCardClick: (purchaseId: string) => void;
-  onPauseResume: (purchaseId: string, currentStatus: string) => void;
-  onDelete: (purchaseId: string) => void;
-  onHide: (purchaseId: string) => void;
-  onReportIssue: (purchaseId: string) => void;
-}
-
-const PurchaseCardsGrid: React.FC<PurchaseCardsGridProps> = ({
-  purchases,
-  onCardClick,
-  onPauseResume,
-  onDelete,
-  onHide,
-  onReportIssue
-}) => (
-  <div className="purchase-cards-grid">
-    {purchases.map((purchase) => (
-      <PurchaseCard
-        key={purchase.purchase_id}
-        purchase={purchase}
-        onClick={() => onCardClick(purchase.purchase_id)}
-        onPauseResume={() =>
-          onPauseResume(purchase.purchase_id, purchase.status)
-        }
-        onDelete={() => onDelete(purchase.purchase_id)}
-        onHide={() => onHide(purchase.purchase_id)}
-        onReportIssue={() => onReportIssue(purchase.purchase_id)}
-      />
-    ))}
-  </div>
-);
-
 // ---------- Purchase Card ----------
 
 interface PurchaseCardProps {
   purchase: PurchaseListItem;
   onClick: () => void;
-  onPauseResume: () => void;
-  onDelete: () => void;
-  onHide: () => void;
-  onReportIssue: () => void;
 }
 
-const PurchaseCard: React.FC<PurchaseCardProps> = ({
-  purchase,
-  onClick,
-  onPauseResume,
-  onDelete,
-  onHide,
-  onReportIssue
-}) => {
-  const [menuOpen, setMenuOpen] = useState(false);
+const PurchaseCard: React.FC<PurchaseCardProps> = ({ purchase, onClick }) => {
+  const hasDeal =
+    purchase.best_deal_summary &&
+    (purchase.status === "deal_found" || purchase.status === "window_closing");
 
+  const isCompleted = purchase.status === "swap_completed";
+  const isSearching =
+    purchase.status === "monitoring" || purchase.status === "swap_in_progress";
   const isPaused = purchase.status === "paused";
   const isExpired = purchase.status === "expired";
-  const isCompleted = purchase.status === "swap_completed";
-  const isDealFound =
-    purchase.status === "deal_found" || purchase.status === "window_closing";
-  const isSwapping = purchase.status === "swap_in_progress";
 
-  // Urgency: show time remaining only when it's relevant and < 24h
-  const timeRemaining = formatTimeRemainingFromSeconds(
+  const timeLabel = formatTimeRemainingFriendly(
     purchase.cancellation_window_remaining
   );
-  const showUrgency =
-    !timeRemaining.expired &&
-    timeRemaining.label !== "Window unknown" &&
-    purchase.cancellation_window_remaining !== undefined &&
-    purchase.cancellation_window_remaining > 0 &&
-    purchase.cancellation_window_remaining < 24 * 3600;
-
-  // Card accent class
-  const accentClass = isDealFound
-    ? "card-accent-green"
-    : showUrgency
-    ? "card-accent-amber"
-    : isCompleted
-    ? "card-accent-cyan"
-    : isExpired || isPaused
-    ? "card-accent-muted"
-    : "";
+  const urgent = isUrgent(purchase.cancellation_window_remaining);
 
   const itemTitle =
     purchase.item_count && purchase.item_count > 1
       ? `Order with ${purchase.item_count} items`
       : purchase.primary_item_title;
 
+  const cardClass = hasDeal
+    ? "purchase-card card-has-deal"
+    : isCompleted
+    ? "purchase-card card-completed"
+    : isExpired
+    ? "purchase-card card-expired"
+    : "purchase-card";
+
   return (
-    <article
-      className={`purchase-card ${accentClass}`}
-      onClick={onClick}
-    >
-      {/* Row 1: Item name + menu */}
-      <div className="card-row-top">
-        <h3 className="card-title">{itemTitle}</h3>
-        <div className="card-menu-wrapper">
-          <button
-            type="button"
-            className="icon-button menu-button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setMenuOpen(!menuOpen);
-            }}
-            aria-label="More actions"
-          >
-            ···
-          </button>
-          {menuOpen && (
-            <CardMenu
-              isPaused={isPaused}
-              onPauseResume={() => {
-                onPauseResume();
-                setMenuOpen(false);
-              }}
-              onHide={() => {
-                onHide();
-                setMenuOpen(false);
-              }}
-              onDelete={() => {
-                onDelete();
-                setMenuOpen(false);
-              }}
-              onReportIssue={() => {
-                onReportIssue();
-                setMenuOpen(false);
-              }}
-            />
+    <article className={cardClass} onClick={onClick}>
+      {/* Card Header: icon + info */}
+      <div className="card-header">
+        <div className="card-product-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 8l-9-5-9 5v8l9 5 9-5V8z" />
+            <path d="M3 8l9 5 9-5" />
+            <path d="M12 13v8.5" />
+          </svg>
+        </div>
+        <div className="card-info">
+          <h3 className="card-title">{itemTitle}</h3>
+          <p className="card-subtitle">
+            Bought from {purchase.merchant} on{" "}
+            {formatPurchaseDate(purchase.purchase_time)}
+          </p>
+          {timeLabel && !isExpired && !isCompleted && (
+            <span className={`card-time-badge ${urgent ? "badge-urgent" : "badge-normal"}`}>
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <circle cx="6" cy="6" r="5" />
+                <path d="M6 3v3.5l2 1" />
+              </svg>
+              {timeLabel}
+            </span>
           )}
         </div>
       </div>
 
-      {/* Row 2: Merchant + price */}
-      <div className="card-meta">
-        <span className="card-merchant">{purchase.merchant}</span>
-        <span className="card-price">
-          {formatCurrency(purchase.total_paid, purchase.currency, "US")}
-        </span>
-      </div>
+      {/* Price Comparison (only for cards with deals) */}
+      {hasDeal && purchase.best_deal_summary && (
+        <>
+          <div className="price-comparison">
+            <div className="price-you-paid">
+              <span className="price-label">YOU PAID</span>
+              <span className="price-amount">
+                {formatCurrency(purchase.total_paid, purchase.currency, "US")}
+              </span>
+            </div>
+            <div className="price-arrow">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 10h12M12 6l4 4-4 4" />
+              </svg>
+            </div>
+            <div className="price-better">
+              <span className="price-label price-label-deal">BETTER PRICE FOUND!</span>
+              <span className="price-amount price-amount-deal">
+                {formatCurrency(
+                  purchase.best_deal_summary.best_deal_total_price,
+                  purchase.currency,
+                  "US"
+                )}
+              </span>
+              {purchase.best_deal_summary.best_deal_merchant && (
+                <span className="price-merchant">
+                  at {purchase.best_deal_summary.best_deal_merchant}
+                </span>
+              )}
+            </div>
+          </div>
 
-      {/* Row 3: Savings / status hero */}
-      <div className="card-hero">
-        <CardHero purchase={purchase} />
-      </div>
+          <div className="card-savings-bar">
+            <div className="savings-info">
+              <span className="savings-amount">
+                Save{" "}
+                {formatCurrency(
+                  purchase.best_deal_summary.best_net_savings,
+                  purchase.currency,
+                  "US"
+                )}
+              </span>
+              <span className="savings-desc">
+                Return this item and buy from{" "}
+                {purchase.best_deal_summary.best_deal_merchant ?? "elsewhere"}{" "}
+                instead
+              </span>
+            </div>
+            <button
+              type="button"
+              className="btn-swap"
+              onClick={(e) => {
+                e.stopPropagation();
+                onClick();
+              }}
+            >
+              Swap & Save
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 8h10M9 4l4 4-4 4" />
+              </svg>
+            </button>
+          </div>
+        </>
+      )}
 
-      {/* Row 4: Urgency nudge (conditional) */}
-      {showUrgency && (
-        <div className="card-urgency">
-          {timeRemaining.label} left to swap
+      {/* Completed card footer */}
+      {isCompleted && purchase.best_deal_summary && (
+        <div className="card-completed-bar">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#16A34A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 8.5l3 3 5-5.5" />
+          </svg>
+          <span>
+            Saved{" "}
+            {formatCurrency(
+              purchase.best_deal_summary.best_net_savings,
+              purchase.currency,
+              "US"
+            )}{" "}
+            by swapping
+          </span>
         </div>
+      )}
+
+      {/* Searching state */}
+      {isSearching && !purchase.best_deal_summary && (
+        <div className="card-searching-bar">
+          <div className="searching-dots">
+            <span /><span /><span />
+          </div>
+          Searching for better prices...
+        </div>
+      )}
+
+      {/* Paused state */}
+      {isPaused && (
+        <div className="card-paused-bar">Monitoring paused</div>
+      )}
+
+      {/* Expired state */}
+      {isExpired && (
+        <div className="card-expired-bar">Return window expired</div>
       )}
     </article>
   );
 };
 
-// ---------- Card Hero (savings / status row) ----------
-
-const CardHero: React.FC<{ purchase: PurchaseListItem }> = ({ purchase }) => {
-  if (purchase.status === "paused") {
-    return <span className="hero-muted">Paused</span>;
-  }
-
-  if (purchase.status === "expired") {
-    return <span className="hero-muted">Window expired</span>;
-  }
-
-  if (purchase.status === "swap_completed" && purchase.best_deal_summary) {
-    return (
-      <span className="hero-saved">
-        Saved{" "}
-        {formatCurrency(
-          purchase.best_deal_summary.best_net_savings,
-          purchase.currency,
-          "US"
-        )}
-      </span>
-    );
-  }
-
-  if (purchase.status === "needs_review") {
-    return <span className="hero-review">Needs your review</span>;
-  }
-
-  if (purchase.status === "swap_in_progress") {
-    return <span className="hero-progress">Swap in progress</span>;
-  }
-
-  if (purchase.best_deal_summary) {
-    return (
-      <span className="hero-savings">
-        Save{" "}
-        {formatCurrency(
-          purchase.best_deal_summary.best_net_savings,
-          purchase.currency,
-          "US"
-        )}{" "}
-        ({purchase.best_deal_summary.best_savings_pct.toFixed(0)}%)
-      </span>
-    );
-  }
-
-  return (
-    <span className="hero-scanning">
-      Scanning for deals<span className="scanning-dots">...</span>
-    </span>
-  );
-};
-
-// ---------- Card Menu ----------
-
-interface CardMenuProps {
-  isPaused: boolean;
-  onPauseResume: () => void;
-  onHide: () => void;
-  onDelete: () => void;
-  onReportIssue: () => void;
-}
-
-const CardMenu: React.FC<CardMenuProps> = ({
-  isPaused,
-  onPauseResume,
-  onHide,
-  onDelete,
-  onReportIssue
-}) => (
-  <div
-    className="card-menu"
-    onClick={(e) => e.stopPropagation()}
-  >
-    <button type="button" className="menu-item" onClick={onPauseResume}>
-      {isPaused ? "Resume monitoring" : "Pause monitoring"}
-    </button>
-    <button type="button" className="menu-item" onClick={onHide}>
-      Hide purchase
-    </button>
-    <button type="button" className="menu-item" onClick={onDelete}>
-      Delete record
-    </button>
-    <button type="button" className="menu-item" onClick={onReportIssue}>
-      Report issue
-    </button>
-  </div>
-);
-
-// ---------- Skeleton Loading ----------
+// ---------- Skeleton ----------
 
 const PurchaseCardsSkeleton: React.FC = () => (
-  <div className="purchase-cards-grid">
-    {[1, 2, 3, 4, 5, 6].map((i) => (
-      <div key={i} className="purchase-card skeleton">
-        <div className="skeleton-line skeleton-title" />
-        <div className="skeleton-line skeleton-meta" />
-        <div className="skeleton-line skeleton-hero" />
+  <div className="card-list">
+    {[1, 2, 3].map((i) => (
+      <div key={i} className="purchase-card skeleton-card">
+        <div className="skeleton-row skeleton-header" />
+        <div className="skeleton-row skeleton-body" />
+        <div className="skeleton-row skeleton-footer" />
       </div>
     ))}
   </div>
@@ -489,13 +384,18 @@ const PurchaseCardsSkeleton: React.FC = () => (
 
 // ---------- Empty State ----------
 
-interface EmptyStateProps {
-  hasSearch: boolean;
-  hasFilter: boolean;
-}
-
-const EmptyState: React.FC<EmptyStateProps> = ({ hasSearch, hasFilter }) => (
+const EmptyState: React.FC<{ hasSearch: boolean; hasFilter: boolean }> = ({
+  hasSearch,
+  hasFilter
+}) => (
   <div className="empty-state">
+    <div className="empty-icon">
+      <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="#D1D5DB" strokeWidth="1.5" strokeLinecap="round">
+        <path d="M40 16L24 6 8 16v16l16 10 16-10V16z" />
+        <path d="M8 16l16 10 16-10" />
+        <path d="M24 26v10.5" />
+      </svg>
+    </div>
     <h2>No purchases found</h2>
     {hasSearch || hasFilter ? (
       <p>Try adjusting your search or filters.</p>
@@ -509,12 +409,10 @@ const EmptyState: React.FC<EmptyStateProps> = ({ hasSearch, hasFilter }) => (
 
 // ---------- Error State ----------
 
-interface ErrorStateProps {
-  error: string;
-  onRetry: () => void;
-}
-
-const ErrorState: React.FC<ErrorStateProps> = ({ error, onRetry }) => (
+const ErrorState: React.FC<{ error: string; onRetry: () => void }> = ({
+  error,
+  onRetry
+}) => (
   <div className="error-state">
     <h2>Something went wrong</h2>
     <p>{error}</p>
