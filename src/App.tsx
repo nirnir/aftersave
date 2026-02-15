@@ -1,14 +1,20 @@
 import React from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { PurchasesListPage } from "./pages/PurchasesListPage";
 import { PurchaseDetailsPage } from "./pages/PurchaseDetailsPage";
 
 export const App: React.FC = () => {
-  // In a real app, purchaseId would come from routing (e.g. /purchases/:id)
-  const purchaseId = "sample-purchase-1";
-
   return (
-    <div className="app-root">
-      <PurchaseDetailsPage purchaseId={purchaseId} />
-    </div>
+    <BrowserRouter>
+      <div className="app-root">
+        <Routes>
+          <Route path="/" element={<PurchasesListPage />} />
+          <Route
+            path="/purchase/:purchaseId"
+            element={<PurchaseDetailsPage />}
+          />
+        </Routes>
+      </div>
+    </BrowserRouter>
   );
 };
-

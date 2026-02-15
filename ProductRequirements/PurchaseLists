@@ -1,0 +1,287 @@
+AfterSave – Purchases List (Savings Inbox) Page Requirements
+
+1. Page Overview
+
+Page Name: Purchases ("Savings Inbox")Purpose: Provide a high-level, scannable overview of all monitored purchases, including urgency, savings opportunities, and status. Clicking a purchase navigates to the Purchase Details & Swap Deals page.
+
+This page is optimized for triage and prioritization.
+
+2. Core Objectives
+
+Clearly show what was purchased, where, when, and for how much.
+
+Surface cancellation/refund urgency.
+
+Highlight best savings found so far.
+
+Make it obvious which purchase requires attention.
+
+Provide quick monitoring controls (pause/resume).
+
+3. Data Contract
+
+Each purchase card consumes the following fields:
+
+purchase_id
+
+merchant (name + logo)
+
+primary_item_title (or "Order with X items")
+
+purchase_time
+
+currency
+
+total_paid
+
+delivery_estimate (optional)
+
+cancellation_window_remaining (seconds) OR cancellation_window_estimated + confidence
+
+status enum:
+
+monitoring
+
+deal_found
+
+window_closing
+
+swap_in_progress
+
+swap_completed
+
+expired
+
+needs_review
+
+paused
+
+best_deal_summary (optional):
+
+best_net_savings
+
+best_savings_pct
+
+best_deal_total_price
+
+last_scan_at
+
+issues[] (optional):
+
+low_confidence
+
+missing_order_id
+
+merchant_not_supported
+
+captcha_blocked
+
+out_of_stock
+
+4. Page Structure
+
+4.1 Header
+
+Title: Purchases
+
+Optional quick stats (Monitoring, Deals Found, Window Closing)
+
+Search input
+
+Filter control
+
+Settings shortcut
+
+4.2 Filters and Sorting
+
+Filter Chips:
+
+All
+
+Window Closing
+
+Deals Found
+
+In Progress
+
+Completed
+
+Needs Review
+
+Paused
+
+Sort Options:
+
+Urgency (default)
+
+Biggest Savings
+
+Most Recent Purchase
+
+Merchant Name
+
+4.3 Purchase Cards
+
+Each card must include:
+
+Top Section
+
+Merchant logo and name
+
+Status badge
+
+Main Content
+
+Primary item title
+
+Total paid
+
+Purchase date/time
+
+Cancellation/refund countdown (or "Estimated" label if inferred)
+
+Savings Snapshot
+
+If deal exists: Best savings (absolute and %)
+
+If no deal: "No better deal yet"
+
+Last scan timestamp
+
+If paused: "Monitoring paused"
+
+Primary Action
+
+"View swap deals" (navigates to Purchase Details page)
+
+Secondary Actions (menu)
+
+Pause / Resume monitoring
+
+Hide purchase
+
+Delete record
+
+Report issue
+
+5. Navigation Requirements
+
+PL-01: Open Swap Center
+
+Clicking card or primary CTA navigates to:
+/purchase/:purchase_id
+
+Back navigation preserves scroll position and filter state.
+
+PL-02: Deep Linking
+
+If opened via notification with purchase_id:
+
+Highlight corresponding card
+
+Optionally auto-open based on user preference
+
+6. Functional Requirements
+
+PL-03: Render with Graceful Degradation
+
+Skeleton loading state
+
+If best_deal_summary missing, show "Scanning" state
+
+If cancellation window unknown, show "Window unknown" label
+
+PL-04: Urgency Detection
+
+Mark as window_closing when remaining time < configurable threshold
+
+Under Urgency sort, these appear first
+
+PL-05: Filters and Sorting
+
+Filter changes update results immediately
+
+Default sort is Urgency
+
+PL-06: Search
+
+Matches merchant, item title, order_id
+
+Debounced input
+
+PL-07: Pause / Resume
+
+Pause sets status to paused and stops scanning
+
+Resume reactivates monitoring
+
+PL-08: Error Handling
+
+On fetch failure, show retry
+
+If cached list exists, render cached
+
+7. States
+
+Empty State
+
+"No purchases yet"
+
+Guidance on connecting email or forwarding receipts
+
+Multi-Item Orders
+
+Display "Order with X items"
+
+Show primary item + "+X more"
+
+Needs Review
+
+Visual emphasis
+
+Routes to details page for confirmation
+
+Expired
+
+Muted style
+
+CTA becomes "View details"
+
+Swap Completed
+
+Show savings achieved
+
+Completion timestamp
+
+CTA "View summary"
+
+8. Privacy and Controls
+
+Accessible info explaining local vs server processing
+
+Quick access to connected accounts
+
+Delete purchase history link
+
+9. Analytics Events
+
+Track at minimum:
+
+purchases_list_viewed
+
+purchase_card_opened
+
+filter_applied
+
+sort_changed
+
+purchase_paused
+
+purchase_resumed
+
+search_used
+
+Include purchase_id and current filter state where relevant.
+
+This specification defines the V1 implementation requirements for the Purchases List (Savings Inbox) page.
+

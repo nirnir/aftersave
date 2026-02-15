@@ -744,3 +744,488 @@ body {
   }
 }
 
+/* ---------- Purchases List Page Styles ---------- */
+
+.purchases-page {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 3rem;
+}
+
+.purchases-header {
+  margin-bottom: 1.5rem;
+}
+
+.purchases-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.purchases-title {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 600;
+}
+
+.settings-btn {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+}
+
+.purchases-stats {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem 0;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.stat-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #9ca3af;
+}
+
+.stat-value {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.purchases-search {
+  margin-top: 0.75rem;
+}
+
+.search-input {
+  width: 100%;
+  max-width: 500px;
+  padding: 0.6rem 0.8rem;
+  border-radius: 0.6rem;
+  border: 1px solid rgba(75, 85, 99, 0.9);
+  background: rgba(15, 23, 42, 0.9);
+  color: #f9fafb;
+  font-size: 0.9rem;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+}
+
+.filters-and-sort {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.filter-chip {
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid rgba(75, 85, 99, 0.9);
+  background: rgba(15, 23, 42, 0.9);
+  color: #e5e7eb;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-chip:hover {
+  background: rgba(31, 41, 55, 0.9);
+  border-color: #60a5fa;
+}
+
+.filter-chip-active {
+  background: linear-gradient(135deg, #2563eb, #22c55e);
+  border-color: transparent;
+  color: #f9fafb;
+}
+
+.sort-control {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sort-label {
+  font-size: 0.8rem;
+  color: #9ca3af;
+}
+
+.sort-select {
+  padding: 0.35rem 0.6rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(75, 85, 99, 0.9);
+  background: rgba(15, 23, 42, 0.9);
+  color: #f9fafb;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.sort-select:focus {
+  outline: none;
+  border-color: #60a5fa;
+}
+
+.purchase-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.25rem;
+}
+
+.purchase-card {
+  background: radial-gradient(circle at top left, #0f172a, #020617 65%);
+  border-radius: 0.9rem;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  padding: 1rem 1.1rem;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.7);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.purchase-card:hover {
+  border-color: #60a5fa;
+  transform: translateY(-2px);
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.8);
+}
+
+.purchase-card-needs-review {
+  border-color: #facc15;
+  background: radial-gradient(
+    circle at top left,
+    rgba(250, 204, 21, 0.1),
+    #020617 65%
+  );
+}
+
+.purchase-card-expired {
+  opacity: 0.6;
+  border-color: rgba(148, 163, 184, 0.2);
+}
+
+.purchase-card-completed {
+  border-color: #22c55e;
+}
+
+.purchase-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.purchase-card-merchant {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.merchant-logo-placeholder {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.5rem;
+  background: linear-gradient(135deg, #2563eb, #22c55e);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 1rem;
+  color: #f9fafb;
+}
+
+.merchant-name {
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.purchase-card-actions {
+  position: relative;
+}
+
+.menu-button {
+  padding: 0.25rem 0.5rem;
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.card-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.25rem;
+  background: #020617;
+  border: 1px solid rgba(75, 85, 99, 0.9);
+  border-radius: 0.6rem;
+  padding: 0.25rem;
+  min-width: 180px;
+  z-index: 20;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.9);
+}
+
+.menu-item {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  background: none;
+  border: none;
+  color: #e5e7eb;
+  font-size: 0.85rem;
+  cursor: pointer;
+  border-radius: 0.4rem;
+  transition: background 0.15s;
+}
+
+.menu-item:hover {
+  background: rgba(31, 41, 55, 0.9);
+}
+
+.purchase-card-status {
+  margin-top: -0.25rem;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 500;
+}
+
+.status-monitoring,
+.status-paused {
+  background: rgba(148, 163, 184, 0.12);
+  color: #cbd5e1;
+}
+
+.status-deal-found {
+  background: rgba(34, 197, 94, 0.12);
+  color: #4ade80;
+}
+
+.status-window-closing {
+  background: rgba(234, 179, 8, 0.14);
+  color: #facc15;
+}
+
+.status-swap-in-progress {
+  background: rgba(59, 130, 246, 0.16);
+  color: #60a5fa;
+}
+
+.status-completed {
+  background: rgba(56, 189, 248, 0.16);
+  color: #22d3ee;
+}
+
+.status-expired {
+  background: rgba(239, 68, 68, 0.14);
+  color: #f97373;
+}
+
+.status-needs-review {
+  background: rgba(250, 204, 21, 0.14);
+  color: #fde68a;
+}
+
+.purchase-card-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.purchase-card-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.purchase-card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+}
+
+.meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.meta-label {
+  color: #9ca3af;
+}
+
+.meta-value {
+  color: #e5e7eb;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.estimated-badge {
+  font-size: 0.7rem;
+  padding: 0.12rem 0.4rem;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.4);
+  color: #e5e7eb;
+}
+
+.purchase-card-savings {
+  padding: 0.6rem 0.7rem;
+  border-radius: 0.6rem;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(31, 41, 55, 0.9);
+}
+
+.savings-found {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.savings-amount {
+  font-weight: 600;
+  color: #4ade80;
+  font-size: 0.9rem;
+}
+
+.savings-meta {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.savings-status {
+  color: #cbd5e1;
+  font-size: 0.85rem;
+}
+
+.savings-scanning {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  color: #9ca3af;
+  font-size: 0.85rem;
+}
+
+.scanning-indicator {
+  font-size: 0.75rem;
+  color: #60a5fa;
+  font-style: italic;
+}
+
+.purchase-card-footer {
+  margin-top: auto;
+}
+
+.card-cta {
+  width: 100%;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+}
+
+/* Skeleton Loading */
+.purchase-card.skeleton {
+  pointer-events: none;
+}
+
+.skeleton-header,
+.skeleton-content,
+.skeleton-footer {
+  background: linear-gradient(
+    90deg,
+    rgba(31, 41, 55, 0.5) 0%,
+    rgba(15, 23, 42, 0.8) 50%,
+    rgba(31, 41, 55, 0.5) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s ease-in-out infinite;
+  border-radius: 0.4rem;
+}
+
+.skeleton-header {
+  height: 3rem;
+  margin-bottom: 0.75rem;
+}
+
+.skeleton-content {
+  height: 8rem;
+  margin-bottom: 0.75rem;
+}
+
+.skeleton-footer {
+  height: 2.5rem;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Empty and Error States */
+.empty-state,
+.error-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #9ca3af;
+}
+
+.empty-state h2,
+.error-state h2 {
+  margin: 0 0 0.5rem;
+  color: #e5e7eb;
+  font-size: 1.2rem;
+}
+
+.empty-state p,
+.error-state p {
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+}
+
+/* Responsive */
+@media (max-width: 960px) {
+  .purchase-cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filters-and-sort {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-chips {
+    justify-content: flex-start;
+  }
+
+  .purchases-stats {
+    flex-wrap: wrap;
+  }
+}
+
