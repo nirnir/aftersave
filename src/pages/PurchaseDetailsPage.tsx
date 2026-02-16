@@ -352,19 +352,19 @@ export const PurchaseDetailsPage: React.FC = () => {
           />
         </section>
 
-        <aside className="swap-page-main-right">
-          <AuditPanel
-            events={MOCK_AUDIT_EVENTS}
-            expanded={auditExpanded}
-            onToggle={() => setAuditExpanded((prev) => !prev)}
-          />
-
-          <PrivacyPanel
-            expanded={privacyExpanded}
-            onToggle={() => setPrivacyExpanded((prev) => !prev)}
-          />
-        </aside>
       </main>
+
+      <footer className="swap-page-footer">
+        <AuditPanel
+          events={MOCK_AUDIT_EVENTS}
+          expanded={auditExpanded}
+          onToggle={() => setAuditExpanded((prev) => !prev)}
+        />
+        <PrivacyPanel
+          expanded={privacyExpanded}
+          onToggle={() => setPrivacyExpanded((prev) => !prev)}
+        />
+      </footer>
 
       <SwapFlowDrawer
         open={!!selectedDeal}
