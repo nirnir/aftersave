@@ -22,14 +22,55 @@ export const App: React.FC = () => {
 
 // ---------- Navbar ----------
 
+/** Logo variant: 1–5. Change this to switch logos. */
+const LOGO_VARIANT = 1;
+
+const LOGO_OPTIONS: Record<number, React.ReactNode> = {
+  // Option 1: "AS" monogram in a rounded square
+  1: (
+    <svg className="navbar-logo" width="28" height="28" viewBox="0 0 28 28" fill="none">
+      <rect width="28" height="28" rx="6" fill="#2563EB" />
+      <text x="14" y="19" textAnchor="middle" fill="#fff" fontSize="14" fontWeight="700" fontFamily="system-ui, sans-serif">AS</text>
+    </svg>
+  ),
+  // Option 2: Swap arrows (exchange/return concept)
+  2: (
+    <svg className="navbar-logo" width="28" height="28" viewBox="0 0 28 28" fill="none">
+      <circle cx="14" cy="14" r="12" fill="#2563EB" />
+      <path d="M10 12l4-4 4 4M18 16l-4 4-4-4" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M14 8v8" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  ),
+  // Option 3: Downward arrow in a shield (price drop)
+  3: (
+    <svg className="navbar-logo" width="28" height="28" viewBox="0 0 28 28" fill="none">
+      <path d="M14 2L4 6v8c0 6.5 4 12 10 14 6-2 10-7.5 10-14V6L14 2z" fill="#2563EB" />
+      <path d="M14 8v8m0 0l-3-3m3 3l3-3" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
+  // Option 4: Minimal "A" with bracket
+  4: (
+    <svg className="navbar-logo" width="28" height="28" viewBox="0 0 28 28" fill="none">
+      <rect width="28" height="28" rx="6" fill="#0F172A" />
+      <path d="M14 8v12M8 20l6-12 6 12" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M10 14h8" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  ),
+  // Option 5: Receipt with checkmark
+  5: (
+    <svg className="navbar-logo" width="28" height="28" viewBox="0 0 28 28" fill="none">
+      <path d="M8 4h12c1.1 0 2 .9 2 2v16c0 1.1-.9 2-2 2H8c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" fill="#2563EB" />
+      <path d="M10 8h8M10 12h6M10 16h4" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" opacity="0.9" />
+      <path d="M16 18l2 2 4-4" stroke="#22C55E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
+};
+
 const Navbar: React.FC = () => (
   <nav className="navbar">
     <div className="navbar-inner">
       <div className="navbar-brand">
-        <svg className="navbar-logo" width="28" height="28" viewBox="0 0 28 28" fill="none">
-          <path d="M14 2L3 7v7c0 7.18 4.69 13.89 11 15.5C20.31 27.89 25 21.18 25 14V7L14 2z" fill="#2563EB" />
-          <path d="M10.5 14.5l2.5 2.5 5-5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+        {LOGO_OPTIONS[LOGO_VARIANT] ?? LOGO_OPTIONS[1]}
         <div className="navbar-brand-text">
           <span className="navbar-name">AfterSave</span>
           <span className="navbar-tagline">NEVER OVERPAY AGAIN</span>
