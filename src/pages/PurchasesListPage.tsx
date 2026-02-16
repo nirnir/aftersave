@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { PurchaseListItem } from "../types/purchase";
-import { MOCK_PURCHASES } from "../data/mockPurchases";
+import { fetchPurchases } from "../api/purchasesApi";
 import {
   formatCurrency,
   formatPurchaseDate,
@@ -19,7 +19,7 @@ export const PurchasesListPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [purchases] = useState<PurchaseListItem[]>(MOCK_PURCHASES);
+  const [purchases, setPurchases] = useState<PurchaseListItem[]>([]);
   const [searchQuery, setSearchQuery] = useState(
     searchParams.get("q") || ""
   );
@@ -27,8 +27,27 @@ export const PurchasesListPage: React.FC = () => {
     (searchParams.get("filter") as FilterType) || "all"
   );
   const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const loadPurchases = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const rows = await fetchPurchases();
+      setPurchases(rows);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to load purchases."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadPurchases();
+  }, [loadPurchases]);
 
   // Debounce search
   useEffect(() => {
@@ -139,7 +158,7 @@ export const PurchasesListPage: React.FC = () => {
       {loading ? (
         <PurchaseCardsSkeleton />
       ) : error ? (
-        <ErrorState error={error} onRetry={() => setError(null)} />
+        <ErrorState error={error} onRetry={loadPurchases} />
       ) : filteredPurchases.length === 0 ? (
         <EmptyState
           hasSearch={!!debouncedSearch}

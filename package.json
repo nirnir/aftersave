@@ -5,11 +5,18 @@
   "description": "AfterSave Purchase Details / Swap Center UI (web prototype)",
   "scripts": {
     "dev": "vite",
+    "server": "node server/index.cjs",
+    "dev:fullstack": "concurrently -k \"npm run server\" \"npm run dev\"",
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint src --ext ts,tsx --max-warnings=0"
   },
   "dependencies": {
+    "@instantdb/admin": "^0.22.138",
+    "concurrently": "^9.2.1",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.28.0"
@@ -25,4 +32,3 @@
     "vite": "^6.0.0"
   }
 }
-

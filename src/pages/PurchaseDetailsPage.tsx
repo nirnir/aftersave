@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   MatchTier,
@@ -9,6 +9,10 @@ import {
   ExecutionMode,
   Coupon
 } from "../types/purchase";
+import {
+  fetchPurchaseDetails,
+  updatePurchaseMonitoring
+} from "../api/purchasesApi";
 
 // Re-export types for backward compatibility
 export type {
@@ -28,6 +32,23 @@ type SwapStatus =
   | "SwapInProgress"
   | "Completed"
   | "Expired";
+
+function mapPurchaseStatusToSwapStatus(status?: string): SwapStatus {
+  switch (status) {
+    case "deal_found":
+      return "DealFound";
+    case "window_closing":
+      return "WindowClosing";
+    case "swap_in_progress":
+      return "SwapInProgress";
+    case "swap_completed":
+      return "Completed";
+    case "expired":
+      return "Expired";
+    default:
+      return "Monitoring";
+  }
+}
 
 // ---------- Mock Data (placeholder until wired to backend) ----------
 
@@ -174,12 +195,12 @@ function calculateTimeRemaining(endIso: string) {
 export const PurchaseDetailsPage: React.FC = () => {
   const { purchaseId } = useParams<{ purchaseId: string }>();
   const navigate = useNavigate();
-  // In V1 this page is backed by concrete data; here we wire mock data.
-  // TODO: Load purchase by purchaseId from API
-  const purchase = MOCK_PURCHASE;
-  const deals = MOCK_DEALS;
-
-  const [status] = useState<SwapStatus>("DealFound");
+  const [purchase, setPurchase] = useState<Purchase>(MOCK_PURCHASE);
+  const [deals, setDeals] = useState<Deal[]>(MOCK_DEALS);
+  const [auditEvents, setAuditEvents] = useState<AuditEvent[]>(MOCK_AUDIT_EVENTS);
+  const [status, setStatus] = useState<SwapStatus>("DealFound");
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [monitoringEnabled, setMonitoringEnabled] = useState(
     purchase.monitoring_enabled
   );
@@ -197,6 +218,35 @@ export const PurchaseDetailsPage: React.FC = () => {
   const [swapCompleted, setSwapCompleted] = useState(false);
   const [auditExpanded, setAuditExpanded] = useState(false);
   const [privacyExpanded, setPrivacyExpanded] = useState(false);
+
+  const loadPurchase = useCallback(async () => {
+    if (!purchaseId) {
+      setLoadError("Missing purchase ID.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setLoadError(null);
+      const payload = await fetchPurchaseDetails(purchaseId);
+      setPurchase(payload.purchase);
+      setDeals(payload.deals);
+      setAuditEvents(payload.auditEvents);
+      setStatus(mapPurchaseStatusToSwapStatus(payload.status));
+      setMonitoringEnabled(payload.purchase.monitoring_enabled);
+    } catch (err) {
+      setLoadError(
+        err instanceof Error ? err.message : "Failed to load purchase details."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [purchaseId]);
+
+  useEffect(() => {
+    void loadPurchase();
+  }, [loadPurchase]);
 
   const timeRemaining = useMemo(
     () => calculateTimeRemaining(purchase.cancellation_window.end),
@@ -255,9 +305,14 @@ export const PurchaseDetailsPage: React.FC = () => {
 
   // ---------- Event handlers (analytics hooks noted in comments) ----------
 
-  function handleToggleMonitoring(next: boolean) {
-    setMonitoringEnabled(next);
-    // analytics: monitoring_toggled
+  async function handleToggleMonitoring(next: boolean) {
+    try {
+      await updatePurchaseMonitoring(purchase.purchase_id, next);
+      setMonitoringEnabled(next);
+      // analytics: monitoring_toggled
+    } catch {
+      setLoadError("Could not update monitoring. Please try again.");
+    }
   }
 
   function handleOpenDeal(deal: Deal) {
@@ -302,6 +357,47 @@ export const PurchaseDetailsPage: React.FC = () => {
 
   const noDealsState = sortedDeals.length === 0;
 
+  if (loading) {
+    return (
+      <div className="swap-page">
+        <p>Loading purchase details...</p>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="swap-page">
+        <button
+          type="button"
+          className="back-link"
+          onClick={() => navigate("/")}
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M10 3L5 8l5 5" />
+          </svg>
+          Back to purchases
+        </button>
+        <div className="error-state">
+          <h2>Could not load this purchase</h2>
+          <p>{loadError}</p>
+          <button type="button" className="btn-primary" onClick={loadPurchase}>
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="swap-page">
       <button type="button" className="back-link" onClick={() => navigate("/")}>
@@ -339,7 +435,7 @@ export const PurchaseDetailsPage: React.FC = () => {
           <DealList
             purchase={purchase}
             deals={sortedDeals}
-            originalTotal={MOCK_PURCHASE.items.reduce(
+            originalTotal={purchase.items.reduce(
               (sum, i) => sum + i.price * i.quantity,
               0
             )}
@@ -356,7 +452,7 @@ export const PurchaseDetailsPage: React.FC = () => {
 
       <footer className="swap-page-footer">
         <AuditPanel
-          events={MOCK_AUDIT_EVENTS}
+          events={auditEvents}
           expanded={auditExpanded}
           onToggle={() => setAuditExpanded((prev) => !prev)}
         />
