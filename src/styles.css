@@ -1056,6 +1056,11 @@ body {
   justify-content: center;
 }
 
+.navbar-icon-btn svg {
+  display: block;
+  flex-shrink: 0;
+}
+
 .navbar-icon-btn:hover {
   color: #1E293B;
   background: rgba(241, 245, 249, 0.8);
