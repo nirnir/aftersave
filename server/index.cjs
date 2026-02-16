@@ -33,8 +33,51 @@ function nowIso() {
   return new Date().toISOString();
 }
 
+function toMinor(amountMajor) {
+  return Math.round(Number(amountMajor || 0) * 100);
+}
+
+function toMajor(amountMinor) {
+  return Number(amountMinor || 0) / 100;
+}
+
+function toLegacyMatchTier(matchTier) {
+  switch (matchTier) {
+    case "exact":
+      return "Exact";
+    case "attribute":
+      return "Attribute";
+    case "similar":
+      return "Similar";
+    default:
+      return "Attribute";
+  }
+}
+
+function resolveDeliveryEstimate(record) {
+  if (record.delivery_estimate_at) {
+    return record.delivery_estimate_at;
+  }
+  if (
+    record.delivery_estimate_window &&
+    typeof record.delivery_estimate_window.end_at === "string"
+  ) {
+    return record.delivery_estimate_window.end_at;
+  }
+  return new Date().toISOString();
+}
+
 function firstOrNull(values) {
   return values && values.length > 0 ? values[0] : null;
+}
+
+function rowsFromQuery(response, entityName) {
+  if (!response || typeof response !== "object") return [];
+  if (Array.isArray(response[entityName])) return response[entityName];
+  if (response.data && Array.isArray(response.data[entityName])) {
+    return response.data[entityName];
+  }
+  return [];
 }
 
 async function findByField(entityName, fieldName, fieldValue) {
@@ -43,7 +86,7 @@ async function findByField(entityName, fieldName, fieldValue) {
       $: { where: { [fieldName]: fieldValue } }
     }
   });
-  return firstOrNull(response?.data?.[entityName] || []);
+  return firstOrNull(rowsFromQuery(response, entityName));
 }
 
 async function listByField(entityName, fieldName, fieldValue) {
@@ -52,7 +95,7 @@ async function listByField(entityName, fieldName, fieldValue) {
       $: { where: { [fieldName]: fieldValue } }
     }
   });
-  return response?.data?.[entityName] || [];
+  return rowsFromQuery(response, entityName);
 }
 
 async function resolveRequestContext(req) {
@@ -113,7 +156,7 @@ async function resolveRequestContext(req) {
       );
       if (defaultAccount) return defaultAccount.account_id;
       const accountsResponse = await db.query({ accounts: {} });
-      const firstAccount = firstOrNull(accountsResponse?.data?.accounts || []);
+      const firstAccount = firstOrNull(rowsFromQuery(accountsResponse, "accounts"));
       return firstAccount?.account_id || null;
     })());
 
@@ -201,6 +244,22 @@ function makeSampleSeedData() {
       receipt_retention_days: 365,
       allow_analytics: true
     },
+    created_at: new Date(now).toISOString(),
+    updated_at: new Date(now).toISOString()
+  };
+
+  const seedUserPreferences = {
+    preferences_id: "preferences_demo_1",
+    account_id: DEFAULT_DEMO_ACCOUNT_ID,
+    allow_similar_items: false,
+    marketplace_sellers_allowed: true,
+    used_refurbished_allowed: false,
+    allow_cross_border: false,
+    minimum_savings_minor: 1000,
+    shipping_parity_required: true,
+    default_execution_mode: "manual",
+    auto_open_from_notification: false,
+    quiet_hours: { start_local: "22:00", end_local: "07:00" },
     created_at: new Date(now).toISOString(),
     updated_at: new Date(now).toISOString()
   };
@@ -460,7 +519,7 @@ function makeSampleSeedData() {
           title: scenario.title,
           attributes: { category: "General", condition: "New" },
           quantity: 1,
-          price: Number(scenario.totalPaid.toFixed(2))
+          price_minor: toMinor(scenario.totalPaid)
         }
       ];
     }
@@ -472,9 +531,10 @@ function makeSampleSeedData() {
         title: `${scenario.title} Item ${index + 1}`,
         attributes: { bundle: "true", index: String(index + 1) },
         quantity: 1,
-        price: index === scenario.itemCount - 1
-          ? Number((scenario.totalPaid - basePrice * (scenario.itemCount - 1)).toFixed(2))
-          : basePrice
+        price_minor:
+          index === scenario.itemCount - 1
+            ? toMinor(scenario.totalPaid - basePrice * (scenario.itemCount - 1))
+            : toMinor(basePrice)
       });
     }
     return items;
@@ -510,10 +570,8 @@ function makeSampleSeedData() {
       purchase_time: purchaseTime,
       currency: "USD",
       country: "US",
-      total_paid: scenario.totalPaid,
-      delivery_estimate: deliveryEstimate,
-      cancellation_window_remaining: remainingSeconds,
-      cancellation_window_estimated: scenario.windowEstimated,
+      total_paid_minor: toMinor(scenario.totalPaid),
+      delivery_estimate_at: deliveryEstimate,
       cancellation_window_confidence: scenario.windowConfidence,
       cancellation_window_end: cancellationWindowEnd,
       cancellation_window_inferred: scenario.windowEstimated,
@@ -535,16 +593,18 @@ function makeSampleSeedData() {
             account_id: DEFAULT_DEMO_ACCOUNT_ID,
             merchant_or_seller: `${scenario.merchant} Marketplace`,
             listing_url: `https://example.com/${scenario.purchase_id}/deal`,
-            match_tier: scenario.status === "deal_found" ? "Exact" : "Attribute",
-            base_price: Number((scenario.totalPaid * 0.82).toFixed(2)),
-            shipping: 4.99,
-            tax_estimate: Number((scenario.totalPaid * 0.06).toFixed(2)),
-            total_price: Number((scenario.totalPaid * 0.9).toFixed(2)),
-            delivery_estimate: new Date(now + 2 * 24 * 60 * 60 * 1000).toISOString(),
+            match_tier: scenario.status === "deal_found" ? "exact" : "attribute",
+            base_price_minor: toMinor(scenario.totalPaid * 0.82),
+            shipping_minor: toMinor(4.99),
+            tax_estimate_minor: toMinor(scenario.totalPaid * 0.06),
+            total_price_minor: toMinor(scenario.totalPaid * 0.9),
+            delivery_estimate_at: new Date(
+              now + 2 * 24 * 60 * 60 * 1000
+            ).toISOString(),
             return_policy_summary: "Standard returns within 30 days.",
             coupon: { code: "AFTERSAVE10", auto_apply_flag: true },
             reliability_score: 0.91,
-            net_savings: Number((scenario.totalPaid * 0.1).toFixed(2)),
+            net_savings_minor: toMinor(scenario.totalPaid * 0.1),
             savings_percentage: 10,
             last_checked_at: new Date(now - 7 * 60 * 1000).toISOString(),
             in_stock_flag: true,
@@ -584,7 +644,7 @@ function makeSampleSeedData() {
       auditEvents.push({
         audit_event_id: `ev-${eventSequence++}`,
         account_id: DEFAULT_DEMO_ACCOUNT_ID,
-        type: "swap_step",
+        type: "swap_step_completed",
         timestamp: new Date(now - 9 * 60 * 1000).toISOString(),
         label: "Swap initiated with merchant",
         detail: "Cancellation requested and replacement checkout started.",
@@ -608,7 +668,7 @@ function makeSampleSeedData() {
       auditEvents.push({
         audit_event_id: `ev-${eventSequence++}`,
         account_id: DEFAULT_DEMO_ACCOUNT_ID,
-        type: "failure",
+        type: "swap_failed",
         timestamp: new Date(now - 8 * 60 * 1000).toISOString(),
         label: "Manual review required",
         detail: "Automation paused due to extraction/merchant issues.",
@@ -616,11 +676,53 @@ function makeSampleSeedData() {
       });
     }
 
+    const swapExecution =
+      scenario.status === "swap_in_progress" || scenario.status === "swap_completed"
+        ? {
+            swap_execution_id: `swap-${scenario.purchase_id}`,
+            account_id: DEFAULT_DEMO_ACCOUNT_ID,
+            purchase_id: scenario.purchase_id,
+            selected_deal_id: deals[0]?.deal_id || `deal-${scenario.purchase_id}`,
+            mode: "semi_automated",
+            sequence_policy: "buy_second_cancel_first",
+            status:
+              scenario.status === "swap_completed"
+                ? "completed"
+                : "executing",
+            acknowledgement_checked: true,
+            final_start_confirmed: true,
+            started_at: new Date(now - 10 * 60 * 1000).toISOString(),
+            completed_at:
+              scenario.status === "swap_completed"
+                ? new Date(now - 5 * 60 * 1000).toISOString()
+                : undefined,
+            created_at: new Date(now).toISOString(),
+            updated_at: new Date(now).toISOString()
+          }
+        : null;
+
+    const merchantReliability = {
+      merchant_reliability_id: `mr-${scenario.merchant
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")}`,
+      account_id: DEFAULT_DEMO_ACCOUNT_ID,
+      merchant_key: scenario.merchant.toLowerCase().replace(/\s+/g, "_"),
+      country: "US",
+      reliability_score: scenario.status === "needs_review" ? 0.62 : 0.9,
+      captcha_events_lookback_count:
+        scenario.issues?.includes("captcha_blocked") ? 1 : 0,
+      ui_drift_events_lookback_count: scenario.status === "needs_review" ? 1 : 0,
+      successful_navigation_rate: scenario.status === "needs_review" ? 0.7 : 0.94,
+      updated_at: new Date(now).toISOString()
+    };
+
     return {
       purchase,
       items: buildItems(scenario),
       deals,
-      auditEvents
+      auditEvents,
+      swapExecution,
+      merchantReliability
     };
   });
 
@@ -633,6 +735,7 @@ function makeSampleSeedData() {
       seedMembership,
       seedProfile,
       seedSettings,
+      seedUserPreferences,
       seedBillingProfile,
       seedDeviceSession,
       ...firstPurchaseRow
@@ -645,27 +748,38 @@ const FALLBACK_SAMPLE_DATA = makeSampleSeedData();
 
 function toBestDealSummary(deals) {
   if (!deals.length) return undefined;
-  const bestDeal = [...deals].sort((a, b) => b.net_savings - a.net_savings)[0];
+  const bestDeal = [...deals].sort(
+    (a, b) => b.net_savings_minor - a.net_savings_minor
+  )[0];
   return {
-    best_net_savings: bestDeal.net_savings,
+    best_net_savings: toMajor(bestDeal.net_savings_minor),
     best_savings_pct: bestDeal.savings_percentage,
-    best_deal_total_price: bestDeal.total_price,
+    best_deal_total_price: toMajor(bestDeal.total_price_minor),
     best_deal_merchant: bestDeal.merchant_or_seller,
     last_scan_at: bestDeal.last_checked_at
   };
 }
 
 function toListItem(purchase, deals) {
+  const cancellationWindowRemaining = purchase.cancellation_window_end
+    ? Math.max(
+        0,
+        Math.floor(
+          (new Date(purchase.cancellation_window_end).getTime() - Date.now()) / 1000
+        )
+      )
+    : undefined;
+
   return {
     purchase_id: purchase.purchase_id,
     merchant: purchase.merchant,
     primary_item_title: purchase.primary_item_title,
     purchase_time: purchase.purchase_time,
     currency: purchase.currency || "USD",
-    total_paid: purchase.total_paid,
-    delivery_estimate: purchase.delivery_estimate,
-    cancellation_window_remaining: purchase.cancellation_window_remaining,
-    cancellation_window_estimated: purchase.cancellation_window_estimated,
+    total_paid: toMajor(purchase.total_paid_minor),
+    delivery_estimate: resolveDeliveryEstimate(purchase),
+    cancellation_window_remaining: cancellationWindowRemaining,
+    cancellation_window_estimated: purchase.cancellation_window_inferred,
     cancellation_window_confidence: purchase.cancellation_window_confidence,
     status: purchase.status,
     best_deal_summary: toBestDealSummary(deals),
@@ -687,9 +801,9 @@ function toDetailPurchase(purchase, items) {
       title: item.title,
       attributes: item.attributes || {},
       quantity: item.quantity,
-      price: item.price
+      price: toMajor(item.price_minor)
     })),
-    delivery_estimate: purchase.delivery_estimate,
+    delivery_estimate: resolveDeliveryEstimate(purchase),
     cancellation_window: {
       end: purchase.cancellation_window_end || new Date().toISOString(),
       inferred: Boolean(purchase.cancellation_window_inferred)
@@ -703,35 +817,82 @@ function toDetailPurchase(purchase, items) {
   };
 }
 
-async function seedSampleData() {
-  const existingPurchasesResponse = await db.query({
-    purchases: {
-      $: { where: { account_id: DEFAULT_DEMO_ACCOUNT_ID } }
-    }
-  });
-  const existingPurchases = existingPurchasesResponse?.data?.purchases || [];
-  const existingPurchaseIds = new Set(
-    existingPurchases.map((purchase) => purchase.purchase_id)
-  );
-  const seedRows = makeSampleSeedData();
-  const missingRows = seedRows.filter(
-    (row) => !existingPurchaseIds.has(row.purchase.purchase_id)
-  );
-  const txChunks = [];
+function toDealResponse(deal) {
+  return {
+    deal_id: deal.deal_id,
+    merchant_or_seller: deal.merchant_or_seller,
+    listing_url: deal.listing_url,
+    match_tier: toLegacyMatchTier(deal.match_tier),
+    base_price: toMajor(deal.base_price_minor),
+    shipping: toMajor(deal.shipping_minor),
+    tax_estimate: toMajor(deal.tax_estimate_minor),
+    total_price: toMajor(deal.total_price_minor),
+    delivery_estimate: resolveDeliveryEstimate(deal),
+    return_policy_summary: deal.return_policy_summary,
+    coupon: deal.coupon,
+    reliability_score: deal.reliability_score,
+    net_savings: toMajor(deal.net_savings_minor),
+    savings_percentage: deal.savings_percentage,
+    last_checked_at: deal.last_checked_at,
+    in_stock_flag: deal.in_stock_flag,
+    stock_confidence: deal.stock_confidence,
+    cross_border: deal.cross_border
+  };
+}
 
-  if (missingRows.length > 0) {
-    const root = seedRows[0];
-    txChunks.push(db.tx.app_users[id()].update(root.seedUser));
-    txChunks.push(db.tx.accounts[id()].update(root.seedAccount));
-    txChunks.push(db.tx.account_memberships[id()].update(root.seedMembership));
-    txChunks.push(db.tx.account_profiles[id()].update(root.seedProfile));
-    txChunks.push(db.tx.account_settings[id()].update(root.seedSettings));
-    txChunks.push(db.tx.billing_profiles[id()].update(root.seedBillingProfile));
-    txChunks.push(db.tx.device_sessions[id()].update(root.seedDeviceSession));
+function toAuditEventResponse(event) {
+  return {
+    id: event.audit_event_id || event.id,
+    type: event.type,
+    timestamp: event.timestamp,
+    label: event.label,
+    detail: event.detail
+  };
+}
+
+async function seedSampleData() {
+  const seedRows = makeSampleSeedData();
+  const root = seedRows[0];
+
+  const [existingPurchases, existingItems, existingDeals, existingEvents, existingSwaps, existingReliability, existingPrefs] =
+    await Promise.all([
+      listByField("purchases", "account_id", DEFAULT_DEMO_ACCOUNT_ID),
+      listByField("purchase_items", "account_id", DEFAULT_DEMO_ACCOUNT_ID),
+      listByField("deal_candidates", "account_id", DEFAULT_DEMO_ACCOUNT_ID),
+      listByField("audit_events", "account_id", DEFAULT_DEMO_ACCOUNT_ID),
+      listByField("swap_executions", "account_id", DEFAULT_DEMO_ACCOUNT_ID),
+      listByField("merchant_reliability", "account_id", DEFAULT_DEMO_ACCOUNT_ID),
+      listByField("user_preferences", "account_id", DEFAULT_DEMO_ACCOUNT_ID)
+    ]);
+
+  const wipeTx = [];
+  for (const row of existingItems) wipeTx.push(db.tx.purchase_items[row.id].delete());
+  for (const row of existingDeals) wipeTx.push(db.tx.deal_candidates[row.id].delete());
+  for (const row of existingEvents) wipeTx.push(db.tx.audit_events[row.id].delete());
+  for (const row of existingSwaps) wipeTx.push(db.tx.swap_executions[row.id].delete());
+  for (const row of existingReliability)
+    wipeTx.push(db.tx.merchant_reliability[row.id].delete());
+  for (const row of existingPrefs) wipeTx.push(db.tx.user_preferences[row.id].delete());
+  for (const row of existingPurchases) wipeTx.push(db.tx.purchases[row.id].delete());
+
+  if (wipeTx.length > 0) {
+    await db.transact(wipeTx);
   }
 
-  for (const row of missingRows) {
+  const txChunks = [
+    db.tx.app_users[id()].update(root.seedUser),
+    db.tx.accounts[id()].update(root.seedAccount),
+    db.tx.account_memberships[id()].update(root.seedMembership),
+    db.tx.account_profiles[id()].update(root.seedProfile),
+    db.tx.account_settings[id()].update(root.seedSettings),
+    db.tx.user_preferences[id()].update(root.seedUserPreferences),
+    db.tx.billing_profiles[id()].update(root.seedBillingProfile),
+    db.tx.device_sessions[id()].update(root.seedDeviceSession)
+  ];
+
+  for (const row of seedRows) {
     txChunks.push(db.tx.purchases[id()].update(row.purchase));
+    txChunks.push(db.tx.merchant_reliability[id()].update(row.merchantReliability));
     for (const item of row.items) {
       txChunks.push(
         db.tx.purchase_items[id()].update({
@@ -748,11 +909,14 @@ async function seedSampleData() {
     }
     for (const deal of row.deals) {
       txChunks.push(
-        db.tx.deals[id()].update({
+        db.tx.deal_candidates[id()].update({
           purchase_id: row.purchase.purchase_id,
           ...deal
         })
       );
+    }
+    if (row.swapExecution) {
+      txChunks.push(db.tx.swap_executions[id()].update(row.swapExecution));
     }
     for (const event of row.auditEvents) {
       txChunks.push(
@@ -764,15 +928,9 @@ async function seedSampleData() {
     }
   }
 
-  if (txChunks.length > 0) {
-    await db.transact(txChunks);
-  }
+  await db.transact(txChunks);
 
-  return {
-    seeded: missingRows.length > 0,
-    added: missingRows.length,
-    count: existingPurchases.length + missingRows.length
-  };
+  return { seeded: true, replaced: existingPurchases.length, added: seedRows.length };
 }
 
 app.get("/api/health", (req, res) => {
@@ -829,12 +987,12 @@ app.get("/api/purchases", async (req, res) => {
       }
     });
     const dealsResponse = await db.query({
-      deals: {
+      deal_candidates: {
         $: { where: { account_id: context.account_id } }
       }
     });
-    const purchases = purchasesResponse?.data?.purchases || [];
-    const deals = dealsResponse?.data?.deals || [];
+    const purchases = rowsFromQuery(purchasesResponse, "purchases");
+    const deals = rowsFromQuery(dealsResponse, "deal_candidates");
 
     const dealsByPurchaseId = deals.reduce((acc, deal) => {
       const dealPurchaseId = deal.purchase_id;
@@ -871,12 +1029,12 @@ app.get("/api/purchases/:purchaseId", async (req, res) => {
         return;
       }
 
-      const fallbackDeals = [...(fallbackMatch.deals || [])].sort(
-        (a, b) => b.net_savings - a.net_savings
-      );
-      const fallbackAuditEvents = [...(fallbackMatch.auditEvents || [])].sort(
-        (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-      );
+      const fallbackDeals = [...(fallbackMatch.deals || [])]
+        .sort((a, b) => b.net_savings_minor - a.net_savings_minor)
+        .map(toDealResponse);
+      const fallbackAuditEvents = [...(fallbackMatch.auditEvents || [])]
+        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+        .map(toAuditEventResponse);
 
       res.json({
         account_id: DEFAULT_DEMO_ACCOUNT_ID,
@@ -898,7 +1056,7 @@ app.get("/api/purchases/:purchaseId", async (req, res) => {
           }
         }),
         db.query({
-          deals: {
+          deal_candidates: {
             $: { where: { purchase_id: purchaseId, account_id: context.account_id } }
           }
         }),
@@ -914,19 +1072,19 @@ app.get("/api/purchases/:purchaseId", async (req, res) => {
         })
       ]);
 
-    const purchase = purchaseResponse?.data?.purchases?.[0];
+    const purchase = rowsFromQuery(purchaseResponse, "purchases")[0];
     if (!purchase) {
       res.status(404).json({ error: "Purchase not found" });
       return;
     }
 
-    const deals = (dealsResponse?.data?.deals || []).sort(
-      (a, b) => b.net_savings - a.net_savings
-    );
-    const items = itemsResponse?.data?.purchase_items || [];
-    const auditEvents = (eventsResponse?.data?.audit_events || []).sort(
-      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-    );
+    const deals = rowsFromQuery(dealsResponse, "deal_candidates")
+      .sort((a, b) => b.net_savings_minor - a.net_savings_minor)
+      .map(toDealResponse);
+    const items = rowsFromQuery(itemsResponse, "purchase_items");
+    const auditEvents = rowsFromQuery(eventsResponse, "audit_events")
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      .map(toAuditEventResponse);
 
     res.json({
       account_id: context.account_id,
@@ -965,7 +1123,7 @@ app.patch(
           }
         }
       });
-      const record = recordResponse?.data?.purchases?.[0];
+      const record = rowsFromQuery(recordResponse, "purchases")[0];
 
       if (!record) {
         res.status(404).json({ error: "Purchase not found" });
@@ -1262,7 +1420,7 @@ app.listen(PORT, async () => {
     const seedResult = await seedSampleData();
     if (seedResult.seeded) {
       console.log(
-        `[server] Seeded ${seedResult.added} new purchases into InstantDB (total: ${seedResult.count}).`
+        `[server] Seeded ${seedResult.added} purchases into InstantDB (replaced ${seedResult.replaced}).`
       );
     }
   } catch (error) {

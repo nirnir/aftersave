@@ -105,17 +105,20 @@ export const schema = i.schema({
       purchase_id: i.string().indexed(),
       account_id: i.string().indexed(),
       merchant: i.string().indexed(),
-      primary_item_title: i.string(),
+      merchant_logo_url: i.string().optional(),
+      order_id: i.string().optional(),
+      primary_item_title: i.string().optional(),
       purchase_time: i.date().indexed(),
       country: i.string(),
       currency: i.string(),
-      total_paid: i.number(),
-      delivery_estimate: i.date().optional(),
-      cancellation_window_remaining: i.number().optional(),
-      cancellation_window_estimated: i.boolean().optional(),
-      cancellation_window_confidence: i.number().optional(),
+      total_paid_minor: i.number(),
+      delivery_estimate_at: i.date().optional(),
+      delivery_estimate_window: i
+        .json<{ start_at: string; end_at: string }>()
+        .optional(),
       cancellation_window_end: i.date().optional(),
       cancellation_window_inferred: i.boolean().optional(),
+      cancellation_window_confidence: i.number().optional(),
       status: i
         .string<
           | "monitoring"
@@ -141,7 +144,6 @@ export const schema = i.schema({
           )[]
         >()
         .optional(),
-      order_id: i.string().optional(),
       item_count: i.number().optional(),
       last_scan_at: i.date().optional(),
       created_at: i.date(),
@@ -155,23 +157,26 @@ export const schema = i.schema({
       title: i.string(),
       attributes: i.json<Record<string, string>>(),
       quantity: i.number(),
-      price: i.number(),
+      price_minor: i.number(),
       created_at: i.date(),
       updated_at: i.date()
     }),
 
-    deals: i.entity({
+    deal_candidates: i.entity({
       deal_id: i.string().indexed(),
       account_id: i.string().indexed(),
       purchase_id: i.string().indexed(),
       merchant_or_seller: i.string().indexed(),
       listing_url: i.string(),
-      match_tier: i.string<"Exact" | "Attribute" | "Similar">().indexed(),
-      base_price: i.number(),
-      shipping: i.number(),
-      tax_estimate: i.number(),
-      total_price: i.number(),
-      delivery_estimate: i.date(),
+      match_tier: i.string<"exact" | "attribute" | "similar">().indexed(),
+      base_price_minor: i.number(),
+      shipping_minor: i.number(),
+      tax_estimate_minor: i.number(),
+      total_price_minor: i.number(),
+      delivery_estimate_at: i.date().optional(),
+      delivery_estimate_window: i
+        .json<{ start_at: string; end_at: string }>()
+        .optional(),
       return_policy_summary: i.string().optional(),
       coupon: i
         .json<{
@@ -180,13 +185,87 @@ export const schema = i.schema({
         } | null>()
         .optional(),
       reliability_score: i.number(),
-      net_savings: i.number(),
+      net_savings_minor: i.number(),
       savings_percentage: i.number(),
       last_checked_at: i.date(),
       in_stock_flag: i.boolean(),
       stock_confidence: i.number(),
-      cross_border: i.boolean().optional(),
+      cross_border: i.boolean(),
+      ranking_explanation: i.string().optional(),
       created_at: i.date(),
+      updated_at: i.date()
+    }),
+
+    swap_executions: i.entity({
+      swap_execution_id: i.string().indexed(),
+      account_id: i.string().indexed(),
+      purchase_id: i.string().indexed(),
+      selected_deal_id: i.string().indexed(),
+      mode: i.string<"manual" | "semi_automated">().indexed(),
+      sequence_policy: i
+        .string<"buy_second_cancel_first" | "cancel_first_buy_second">()
+        .indexed(),
+      status: i
+        .string<
+          | "draft"
+          | "awaiting_confirmation"
+          | "executing"
+          | "fallback_manual"
+          | "completed"
+          | "failed"
+          | "cancelled"
+        >()
+        .indexed(),
+      acknowledgement_checked: i.boolean(),
+      final_start_confirmed: i.boolean(),
+      started_at: i.date().optional(),
+      completed_at: i.date().optional(),
+      fallback_reason: i.string().optional(),
+      failure_reason_code: i.string().optional(),
+      failure_detail: i.string().optional(),
+      steps: i
+        .json<
+          {
+            step_id: string;
+            label: string;
+            status: "pending" | "running" | "completed" | "failed";
+            started_at?: string;
+            finished_at?: string;
+            detail?: string;
+          }[]
+        >()
+        .optional(),
+      created_at: i.date(),
+      updated_at: i.date()
+    }),
+
+    user_preferences: i.entity({
+      preferences_id: i.string().indexed(),
+      account_id: i.string().indexed(),
+      allow_similar_items: i.boolean(),
+      marketplace_sellers_allowed: i.boolean(),
+      used_refurbished_allowed: i.boolean(),
+      allow_cross_border: i.boolean(),
+      minimum_savings_minor: i.number(),
+      shipping_parity_required: i.boolean(),
+      default_execution_mode: i.string<"manual" | "semi_automated">(),
+      auto_open_from_notification: i.boolean().optional(),
+      quiet_hours: i
+        .json<{ start_local: string; end_local: string }>()
+        .optional(),
+      created_at: i.date(),
+      updated_at: i.date()
+    }),
+
+    merchant_reliability: i.entity({
+      merchant_reliability_id: i.string().indexed(),
+      account_id: i.string().indexed(),
+      merchant_key: i.string().indexed(),
+      country: i.string().indexed(),
+      reliability_score: i.number(),
+      captcha_events_lookback_count: i.number(),
+      ui_drift_events_lookback_count: i.number(),
+      successful_navigation_rate: i.number(),
       updated_at: i.date()
     }),
 
@@ -200,15 +279,19 @@ export const schema = i.schema({
           | "data_extracted"
           | "deals_evaluated"
           | "recommendation_generated"
-          | "swap_step"
+          | "swap_started"
+          | "swap_step_completed"
+          | "swap_failed"
           | "swap_completed"
-          | "failure"
+          | "monitoring_paused"
+          | "monitoring_resumed"
         >()
         .indexed(),
       timestamp: i.date().indexed(),
       label: i.string(),
       detail: i.string().optional(),
       actor_user_id: i.string().optional(),
+      metadata: i.json<Record<string, unknown>>().optional(),
       created_at: i.date()
     })
   },
@@ -230,13 +313,25 @@ export const schema = i.schema({
       forward: { on: "purchase_items", has: "one", label: "purchase" },
       reverse: { on: "purchases", has: "many", label: "items" }
     },
-    dealsPurchase: {
-      forward: { on: "deals", has: "one", label: "purchase" },
-      reverse: { on: "purchases", has: "many", label: "deals" }
+    dealCandidatesPurchase: {
+      forward: { on: "deal_candidates", has: "one", label: "purchase" },
+      reverse: { on: "purchases", has: "many", label: "deal_candidates" }
+    },
+    swapExecutionsPurchase: {
+      forward: { on: "swap_executions", has: "one", label: "purchase" },
+      reverse: { on: "purchases", has: "many", label: "swap_executions" }
     },
     auditEventsPurchase: {
       forward: { on: "audit_events", has: "one", label: "purchase" },
       reverse: { on: "purchases", has: "many", label: "audit_events" }
+    },
+    userPreferencesAccount: {
+      forward: { on: "user_preferences", has: "one", label: "account" },
+      reverse: { on: "accounts", has: "one", label: "user_preferences" }
+    },
+    merchantReliabilityAccount: {
+      forward: { on: "merchant_reliability", has: "one", label: "account" },
+      reverse: { on: "accounts", has: "many", label: "merchant_reliability" }
     },
     accountProfileAccount: {
       forward: { on: "account_profiles", has: "one", label: "account" },
@@ -262,3 +357,4 @@ export const schema = i.schema({
 });
 
 export type AfterSaveInstantSchema = typeof schema;
+export default schema;
