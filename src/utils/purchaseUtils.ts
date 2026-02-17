@@ -164,7 +164,7 @@ export function getTotalSavings(purchases: PurchaseListItem[]): {
 // ---------- Summary Message ----------
 
 export function getSummaryMessage(purchases: PurchaseListItem[]): string {
-  const { totalAmount, count } = getTotalSavings(purchases);
+  const { count } = getTotalSavings(purchases);
 
   if (count > 0) {
     return `${count} purchase${count === 1 ? " has" : "s have"} savings ready`;

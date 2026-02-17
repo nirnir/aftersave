@@ -1,0 +1,53 @@
+---
+description: Enforces consistent use of the AfterSave design system when building or modifying frontend components. Always reference design-system.mdc for exact tokens.
+globs: "**/*.{tsx,css}"
+alwaysApply: false
+---
+
+# Frontend Component Standards
+
+When building new UI or modifying existing components, **always follow the AfterSave design system** defined in `design-system.mdc`. Never invent new colors, spacing, shadows, or border-radius values.
+
+## Rules
+
+1. **Colors** — Use only the palette from the design system. Primary actions = blue gradient (`#3B82F6 → #2563EB`). Success = green (`#16A34A`). Error = red (`#DC2626`). Text hierarchy: `#0F172A` → `#111827` → `#1E293B` → `#6B7280` → `#9CA3AF`.
+
+2. **Typography** — System font stack (`-apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", system-ui, sans-serif`). Follow the established size/weight scale. Labels are always uppercase `0.7rem` weight 600+.
+
+3. **Spacing** — Use the existing scale (`0.25rem`, `0.5rem`, `0.75rem`, `1rem`, `1.25rem`, `1.5rem`, `2rem`, `3.5rem`). Don't introduce arbitrary values like `13px` or `1.3rem`.
+
+4. **Border radius** — Cards = `1.25rem`, buttons = `0.5–0.75rem`, inputs = `0.875rem`, pills/badges = `999px`. Never use values outside this set.
+
+5. **Shadows** — Use the established shadow tokens (subtle, medium, elevated, primary-button, banner). All shadows use `rgba(15, 23, 42, ...)` for neutral or `rgba(37, 99, 235, ...)` for blue accents.
+
+6. **Buttons** — Reuse existing CSS classes: `.btn-primary`, `.btn-secondary`, `.btn-ghost`, `.btn-swap`, `.lp-btn-primary`. New button variants must follow the same gradient + hover-lift + shadow pattern.
+
+7. **Cards** — White bg, `1.25rem` radius, `2px` border in `rgba(226, 232, 240, 0.6)`. Hover = `translateY(-2px)` lift + blue border tint. Variant cards (deal, completed) use tinted borders and gradient backgrounds.
+
+8. **Interactions** — Hover lifts use `transform: translateY(-1px)` or `translateY(-2px)`. Transitions = `all 0.2s cubic-bezier(0.4, 0, 0.2, 1)`. Active state = `translateY(0)` with reduced shadow.
+
+9. **Icons** — Inline SVGs only, stroke-based (`strokeWidth: 1.5`, `strokeLinecap: "round"`). Use `currentColor` for inherited color. Standard sizes: 12/16/20/24px.
+
+10. **CSS** — Plain CSS with class-based selectors (no CSS modules, no Tailwind, no styled-components). Add styles to `src/styles.css` or the relevant page CSS file. Use existing class naming conventions (kebab-case, BEM-ish).
+
+11. **Responsive** — Mobile-first adjustments at `640px` and `960px` breakpoints. Full-width buttons on mobile, simplified grid layouts.
+
+12. **Accessibility** — All interactive elements must have `:focus-visible` styles (blue outline). Use semantic HTML, `aria-` attributes, and `role` where appropriate.
+
+## Quick Reference
+
+```css
+/* Standard card */
+background: #fff;
+border-radius: 1.25rem;
+border: 2px solid rgba(226, 232, 240, 0.6);
+box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 4px 8px rgba(15, 23, 42, 0.02);
+transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+/* Standard primary button */
+background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+color: #fff;
+border-radius: 0.5rem;
+font-weight: 600;
+box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15), 0 1px 3px rgba(37, 99, 235, 0.1);
+```

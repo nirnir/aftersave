@@ -1,0 +1,180 @@
+---
+description: AfterSave design system — colors, typography, spacing, components, and patterns extracted from the existing UI. Reference this when building or modifying any frontend component.
+globs: "**/*.{tsx,css}"
+alwaysApply: false
+---
+
+# AfterSave Design System
+
+## Colors
+
+### Brand & Primary
+| Token | Value | Usage |
+|---|---|---|
+| Primary | `#2563EB` | Links, active states, CTA text |
+| Primary gradient | `linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)` | Buttons, banners, active tabs |
+| Primary hover gradient | `linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)` | Hover states |
+| Focus ring | `#3B82F6` with `outline-offset: 2px` | Accessibility focus |
+
+### Backgrounds
+| Token | Value | Usage |
+|---|---|---|
+| Page bg | `linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%)` | App body |
+| Card bg | `#fff` | Cards, drawers |
+| Surface | `#F9FAFB` | Inner surfaces, sub-cards |
+| Surface alt | `#F8FAFC` | Searching bars, subtle bg |
+| Dark bg | `linear-gradient(160deg, #0F172A 0%, #1E293B 50%, #0F172A 100%)` | Hero, dark sections |
+
+### Text
+| Token | Value | Usage |
+|---|---|---|
+| Heading | `#0F172A` | Page titles, section headings |
+| Card heading | `#111827` | Card titles, bold text |
+| Body | `#1E293B` | Primary body text |
+| Secondary | `#475569` | Descriptions |
+| Muted | `#6B7280` | Subtitles, meta text |
+| Dim | `#9CA3AF` | Labels, timestamps |
+| Placeholder | `#94A3B8` | Input placeholders, trust text |
+
+### Semantic
+| Token | Value | Usage |
+|---|---|---|
+| Success | `#16A34A` / `#15803D` | Savings, completed states |
+| Success bg | `linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%)` | Savings bars, completed bars |
+| Warning | `#B45309` / `#92400E` | Window-closing badges |
+| Warning bg | `linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)` | Warning banners |
+| Error | `#DC2626` / `#B91C1C` | Urgent badges, errors |
+| Error bg | `linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%)` | Error banners, urgent badges |
+
+### Borders
+| Token | Value | Usage |
+|---|---|---|
+| Default | `rgba(226, 232, 240, 0.8)` | Cards, inputs |
+| Subtle | `#F3F4F6` | Inner dividers |
+| Medium | `#E5E7EB` | Section dividers |
+| Active/hover | `rgba(147, 197, 253, 0.8)` | Hovered cards, focused inputs |
+| Deal card | `rgba(96, 165, 250, 0.5)` | Cards with deals |
+
+## Typography
+
+- **Font stack**: `-apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", system-ui, sans-serif`
+- **Smoothing**: `-webkit-font-smoothing: antialiased`
+
+| Element | Size | Weight | Letter-spacing | Extra |
+|---|---|---|---|---|
+| Page title | `1.875rem` | 700 | `-0.02em` | `line-height: 1.2` |
+| Section heading | `2rem` | 800 | `-0.03em` | `line-height: 1.15` |
+| Card title | `1rem` | 600 | — | `line-height: 1.3` |
+| Card heading (h2) | `1.05rem` | 600 | — | — |
+| Body | `1rem–1.05rem` | 400 | — | `line-height: 1.6` |
+| Small body | `0.875rem` | 400–500 | — | — |
+| Subtitle | `0.85rem` | 400 | — | `color: #6B7280` |
+| Label (uppercase) | `0.7rem` | 600–700 | `0.05–0.1em` | `text-transform: uppercase` |
+| Price large | `1.5rem` | 700 | `-0.02em` | — |
+| Button text | `0.82–0.95rem` | 600 | — | — |
+
+## Spacing
+
+| Scale step | Value | Common usage |
+|---|---|---|
+| 2xs | `0.15rem` | Tight gaps |
+| xs | `0.25rem` | Pill padding, tiny gaps |
+| sm | `0.5rem` | Button gaps, tab gaps |
+| md | `0.75rem` | Inner card padding, list gaps |
+| base | `1rem` | Card list gap, section gaps |
+| lg | `1.25rem` | Card inner padding |
+| xl | `1.5rem` | Page padding, section margin |
+| 2xl | `2rem` | Page top padding |
+| 3xl | `3.5rem` | Section padding |
+
+**Max widths**: `800px` (purchases page), `900px` (detail page), `1060px` (landing sections)
+**Page padding**: `2rem 1.5rem 4rem` (purchases), `1.5rem 1.5rem 3rem` (details)
+
+## Border Radius
+
+| Token | Value | Usage |
+|---|---|---|
+| Card | `1.25rem` | Purchase cards, example cards |
+| Card inner | `1rem` | Inner cards, drawer sections |
+| Button | `0.5rem` (app) / `0.75rem` (landing) | CTAs, actions |
+| Input | `0.875rem` | Search inputs, form fields |
+| Inner surface | `0.6rem` | Sub-items, parsed data |
+| Pill/badge | `999px` | Filter tabs, status badges, pills |
+| Icon container | `0.875rem` | Product icons, mode icons |
+
+## Shadows
+
+```css
+/* Subtle — default cards */
+box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 4px 8px rgba(15, 23, 42, 0.02);
+
+/* Medium — hovered cards */
+box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06), 0 8px 24px rgba(15, 23, 42, 0.04);
+
+/* Elevated — deal cards hovered */
+box-shadow: 0 8px 24px rgba(37, 99, 235, 0.12), 0 16px 48px rgba(37, 99, 235, 0.08);
+
+/* Primary button */
+box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15), 0 1px 3px rgba(37, 99, 235, 0.1);
+
+/* Banner */
+box-shadow: 0 4px 16px rgba(37, 99, 235, 0.25), 0 8px 32px rgba(37, 99, 235, 0.15);
+```
+
+## Transitions & Interactions
+
+- **Standard**: `all 0.2s cubic-bezier(0.4, 0, 0.2, 1)`
+- **Fast**: `0.15s ease`
+- **Hover lift (cards)**: `transform: translateY(-2px)` with elevated shadow
+- **Hover lift (buttons)**: `transform: translateY(-1px)` with enhanced shadow
+- **Active press**: `transform: translateY(0)` with reduced shadow
+- **Animations**: `slideIn` (drawers), `fadeIn` (overlays), `pulse-badge` (notifications)
+
+## Component Patterns
+
+### Buttons
+- **Primary** (`.btn-primary`): Blue gradient bg, white text, `border-radius: 0.5rem`, hover lift
+- **Secondary** (`.btn-secondary`): White bg, subtle border, muted text
+- **Ghost** (`.btn-ghost`): Transparent bg, light border
+- **Swap CTA** (`.btn-swap`): Blue gradient, `border-radius: 0.625rem`, inline-flex with arrow icon
+- **Landing primary** (`.lp-btn-primary`): Larger padding `0.7rem 1.4rem`, `border-radius: 0.75rem`
+
+### Cards
+- White background, `border-radius: 1.25rem`, `border: 2px solid rgba(226, 232, 240, 0.6)`
+- Hover: lift + blue border tint + elevated shadow
+- Deal variant: blue-tinted border + light blue gradient bg
+- Completed variant: green-tinted border + light green gradient bg
+
+### Badges & Pills
+- `border-radius: 999px`, tiny padding `0.3rem 0.75rem`
+- Urgent: red gradient bg + red text + pulse animation
+- Normal: light gray bg + muted text
+- Status pills use gradient backgrounds matching semantic colors
+
+### Inputs
+- `border-radius: 0.875rem`, `border: 1.5px solid rgba(226, 232, 240, 0.8)`
+- Focus: blue border `rgba(96, 165, 250, 0.8)` + blue ring `0 0 0 4px rgba(37, 99, 235, 0.08)`
+- Hover (unfocused): slightly darker border
+
+### Banners
+- `border-radius: 1.25rem`, prominent padding `1.5rem 1.75rem`
+- Savings banner: Primary blue gradient bg, white text, star icon
+- Warning: amber gradient bg, dark amber text
+- Error: red gradient bg, dark red text
+
+### Skeleton Loaders
+- `border-radius: 0.35rem`
+- Animated gradient: `#F3F4F6 → #E5E7EB → #F3F4F6`
+- Animation: `background-size: 200% 100%` sliding
+
+## Responsive Breakpoints
+
+- **Mobile**: `max-width: 640px` — single-column layouts, full-width buttons, hidden decorative elements
+- **Tablet**: `max-width: 960px` — simplified grids, stacked layouts
+
+## Icons
+
+- Inline SVGs only (no icon library)
+- Stroke-based: `strokeWidth: 1.5`, `strokeLinecap: "round"`, `strokeLinejoin: "round"`
+- Sizes: `12px` (badges), `16px` (inline), `20px` (buttons/nav), `24px` (cards), `48px` (empty states)
+- Color inherits from parent via `stroke="currentColor"` or explicit color

@@ -591,6 +591,7 @@ function makeSampleSeedData() {
           {
             deal_id: `deal-${dealSequence++}`,
             account_id: DEFAULT_DEMO_ACCOUNT_ID,
+            purchase_id: scenario.purchase_id,
             merchant_or_seller: `${scenario.merchant} Marketplace`,
             listing_url: `https://example.com/${scenario.purchase_id}/deal`,
             match_tier: scenario.status === "deal_found" ? "exact" : "attribute",

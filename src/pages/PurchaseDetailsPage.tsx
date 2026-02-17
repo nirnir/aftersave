@@ -371,7 +371,7 @@ export const PurchaseDetailsPage: React.FC = () => {
         <button
           type="button"
           className="back-link"
-          onClick={() => navigate("/")}
+          onClick={() => navigate("/app")}
         >
           <svg
             width="16"
@@ -400,7 +400,7 @@ export const PurchaseDetailsPage: React.FC = () => {
 
   return (
     <div className="swap-page">
-      <button type="button" className="back-link" onClick={() => navigate("/")}>
+      <button type="button" className="back-link" onClick={() => navigate("/app")}>
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M10 3L5 8l5 5" />
         </svg>

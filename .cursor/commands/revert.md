@@ -1,0 +1,1 @@
+Revert to the last git commit, ignoring all the changes since. 

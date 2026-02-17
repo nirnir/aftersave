@@ -1,4 +1,5 @@
 import { AuditEvent, Deal, Purchase, PurchaseListItem } from "../types/purchase";
+import { getAuthHeaders } from "../auth/instantClient";
 
 interface PurchaseDetailsResponse {
   status: string;
@@ -20,7 +21,9 @@ async function parseResponse<T>(response: Response): Promise<T> {
 }
 
 export async function fetchPurchases(): Promise<PurchaseListItem[]> {
-  const response = await fetch("/api/purchases");
+  const response = await fetch("/api/purchases", {
+    headers: getAuthHeaders()
+  });
   const body = await parseResponse<{ purchases: PurchaseListItem[] }>(response);
   return body.purchases;
 }
@@ -28,7 +31,9 @@ export async function fetchPurchases(): Promise<PurchaseListItem[]> {
 export async function fetchPurchaseDetails(
   purchaseId: string
 ): Promise<PurchaseDetailsResponse> {
-  const response = await fetch(`/api/purchases/${encodeURIComponent(purchaseId)}`);
+  const response = await fetch(`/api/purchases/${encodeURIComponent(purchaseId)}`, {
+    headers: getAuthHeaders()
+  });
   return parseResponse<PurchaseDetailsResponse>(response);
 }
 
@@ -41,7 +46,8 @@ export async function updatePurchaseMonitoring(
     {
       method: "PATCH",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        ...getAuthHeaders()
       },
       body: JSON.stringify({ monitoring_enabled: monitoringEnabled })
     }
