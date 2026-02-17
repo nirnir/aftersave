@@ -234,6 +234,51 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
+      {/* ===== SIMULATOR ===== */}
+      <section className="lp-section lp-sim-section" id="savings-simulator">
+        <div className="lp-sim-wrapper">
+          <div className="lp-sim-copy">
+            <span className="lp-label">Free savings calculator</span>
+            <h2 className="lp-h2">See what <em>you</em> could save — in seconds</h2>
+            <p className="lp-body">Answer three quick questions and get an instant, conservative estimate of your annual savings. No signup required.</p>
+            <div className="lp-sim-trust">
+              {TRUST_SIGNALS.map((t) => (
+                <div key={t.icon} className="lp-sim-trust-item">
+                  <TrustIcon type={t.icon} />
+                  <span>{t.text}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="lp-sim-card">
+            <div className="lp-sim-field">
+              <label htmlFor="sim-orders">Online orders per month</label>
+              <input id="sim-orders" type="range" min={1} max={30} value={orders} onChange={(e) => { setOrders(Number(e.target.value)); handleSimulate(); }} />
+              <output>{orders}</output>
+            </div>
+            <div className="lp-sim-field">
+              <label htmlFor="sim-value">Average order value ({sel.symbol})</label>
+              <input id="sim-value" type="range" min={20} max={1000} step={10} value={avgValue} onChange={(e) => { setAvgValue(Number(e.target.value)); handleSimulate(); }} />
+              <output>{sel.symbol}{avgValue}</output>
+            </div>
+            <div className="lp-sim-field">
+              <label htmlFor="sim-country">Country</label>
+              <select id="sim-country" value={country} onChange={(e) => { setCountry(e.target.value); handleSimulate(); }}>
+                {COUNTRIES.map((c) => <option key={c.code} value={c.code}>{c.label}</option>)}
+              </select>
+            </div>
+            <div className={`lp-sim-result ${simAnimated ? "lp-sim-pop" : ""}`} role="status" aria-live="polite">
+              <span className="lp-sim-result-label">Your estimated annual savings</span>
+              <span className="lp-sim-result-value">{fmtEstimate}</span>
+              <span className="lp-sim-result-note">Conservative estimate based on monitored return windows</span>
+            </div>
+            <Link to="/auth" className="lp-btn lp-btn-primary lp-btn-block">
+              Start Saving &mdash; It&rsquo;s Free
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* ===== PROBLEM / DEAD ZONE ===== */}
       <section className="lp-section lp-problem">
         <span className="lp-label lp-label-center">The problem</span>
@@ -279,51 +324,6 @@ export const LandingPage: React.FC = () => {
             <div className="lp-tl-cov-bar lp-tl-cov-aftersave">
               <span>⚡ AfterSave</span>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ===== SIMULATOR ===== */}
-      <section className="lp-section lp-sim-section" id="savings-simulator">
-        <div className="lp-sim-wrapper">
-          <div className="lp-sim-copy">
-            <span className="lp-label">Your personal estimate</span>
-            <h2 className="lp-h2">How much could <em>you</em> save?</h2>
-            <p className="lp-body">Answer three quick questions and get an instant, conservative estimate of your annual savings. No signup required.</p>
-            <div className="lp-sim-trust">
-              {TRUST_SIGNALS.map((t) => (
-                <div key={t.icon} className="lp-sim-trust-item">
-                  <TrustIcon type={t.icon} />
-                  <span>{t.text}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="lp-sim-card">
-            <div className="lp-sim-field">
-              <label htmlFor="sim-orders">Online orders per month</label>
-              <input id="sim-orders" type="range" min={1} max={30} value={orders} onChange={(e) => { setOrders(Number(e.target.value)); handleSimulate(); }} />
-              <output>{orders}</output>
-            </div>
-            <div className="lp-sim-field">
-              <label htmlFor="sim-value">Average order value ({sel.symbol})</label>
-              <input id="sim-value" type="range" min={20} max={1000} step={10} value={avgValue} onChange={(e) => { setAvgValue(Number(e.target.value)); handleSimulate(); }} />
-              <output>{sel.symbol}{avgValue}</output>
-            </div>
-            <div className="lp-sim-field">
-              <label htmlFor="sim-country">Country</label>
-              <select id="sim-country" value={country} onChange={(e) => { setCountry(e.target.value); handleSimulate(); }}>
-                {COUNTRIES.map((c) => <option key={c.code} value={c.code}>{c.label}</option>)}
-              </select>
-            </div>
-            <div className={`lp-sim-result ${simAnimated ? "lp-sim-pop" : ""}`} role="status" aria-live="polite">
-              <span className="lp-sim-result-label">Your estimated annual savings</span>
-              <span className="lp-sim-result-value">{fmtEstimate}</span>
-              <span className="lp-sim-result-note">Conservative estimate based on monitored return windows</span>
-            </div>
-            <Link to="/auth" className="lp-btn lp-btn-primary lp-btn-block">
-              Start Saving &mdash; It&rsquo;s Free
-            </Link>
           </div>
         </div>
       </section>
