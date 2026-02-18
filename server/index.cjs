@@ -1202,87 +1202,122 @@ app.post("/api/auth/register", requireAdminToken, async (req, res) => {
     let membership = memberships.find((m) => m.membership_status === "active") || null;
 
     if (!membership) {
-      const accountId = `acct_${id()}`;
-      const accountName =
-        (typeof fullName === "string" && fullName.trim()
-          ? `${fullName.trim()}'s Workspace`
-          : "My AfterSave Workspace");
-      const account = {
-        account_id: accountId,
-        name: accountName,
-        plan: "free",
-        status: "active",
-        timezone: "UTC",
-        default_currency: "USD",
-        country: "US",
-        created_at: timestamp,
-        updated_at: timestamp
-      };
-      membership = {
-        membership_id: `membership_${id()}`,
-        account_id: accountId,
-        app_user_id: user.user_id,
-        role: "owner",
-        membership_status: "active",
-        invited_by_user_id: null,
-        joined_at: timestamp,
-        created_at: timestamp,
-        updated_at: timestamp
-      };
+      // Check if demo account exists and assign user to it
+      const demoAccount = await findByField(
+        "accounts",
+        "account_id",
+        DEFAULT_DEMO_ACCOUNT_ID
+      );
 
-      const profile = {
-        profile_id: `profile_${id()}`,
-        account_id: accountId,
-        display_name: accountName,
-        support_email: normalizedEmail,
-        contact_phone: null,
-        billing_address: null,
-        logo_url: null,
-        created_at: timestamp,
-        updated_at: timestamp
-      };
+      let accountId;
+      let accountName;
 
-      const settings = {
-        settings_id: `settings_${id()}`,
-        account_id: accountId,
-        notifications: {
-          email_deal_alerts: true,
-          email_window_closing: true,
-          weekly_digest: true
-        },
-        automation_defaults: {
-          allow_similar: false,
-          allow_cross_border: false,
-          default_execution_mode: "Manual"
-        },
-        privacy: {
-          receipt_retention_days: 365,
-          allow_analytics: true
-        },
-        created_at: timestamp,
-        updated_at: timestamp
-      };
+      if (demoAccount) {
+        // Assign to existing demo account
+        accountId = DEFAULT_DEMO_ACCOUNT_ID;
+        accountName = demoAccount.name;
 
-      const billing = {
-        billing_profile_id: `billing_${id()}`,
-        account_id: accountId,
-        provider: "manual",
-        provider_customer_id: null,
-        provider_subscription_id: null,
-        billing_email: normalizedEmail,
-        billing_status: "trialing",
-        current_period_end: null,
-        created_at: timestamp,
-        updated_at: timestamp
-      };
+        // Create membership for this user in the demo account
+        membership = {
+          membership_id: `membership_${id()}`,
+          account_id: accountId,
+          app_user_id: user.user_id,
+          role: "owner",
+          membership_status: "active",
+          invited_by_user_id: null,
+          joined_at: timestamp,
+          created_at: timestamp,
+          updated_at: timestamp
+        };
 
-      await db.transact([
-        db.tx.accounts[id()].update(account),
-        db.tx.account_memberships[id()].update(membership),
-        db.tx.account_profiles[id()].update(profile),
-        db.tx.account_settings[id()].update(settings),
-        db.tx.billing_profiles[id()].update(billing)
-      ]);
+        // Only create the membership, don't recreate the account
+        await db.transact([
+          db.tx.account_memberships[id()].update(membership)
+        ]);
+      } else {
+        // Create a new account if demo doesn't exist
+        accountId = `acct_${id()}`;
+        accountName =
+          (typeof fullName === "string" && fullName.trim()
+            ? `${fullName.trim()}'s Workspace`
+            : "My AfterSave Workspace");
+        const account = {
+          account_id: accountId,
+          name: accountName,
+          plan: "free",
+          status: "active",
+          timezone: "UTC",
+          default_currency: "USD",
+          country: "US",
+          created_at: timestamp,
+          updated_at: timestamp
+        };
+        membership = {
+          membership_id: `membership_${id()}`,
+          account_id: accountId,
+          app_user_id: user.user_id,
+          role: "owner",
+          membership_status: "active",
+          invited_by_user_id: null,
+          joined_at: timestamp,
+          created_at: timestamp,
+          updated_at: timestamp
+        };
+
+        const profile = {
+          profile_id: `profile_${id()}`,
+          account_id: accountId,
+          display_name: accountName,
+          support_email: normalizedEmail,
+          contact_phone: null,
+          billing_address: null,
+          logo_url: null,
+          created_at: timestamp,
+          updated_at: timestamp
+        };
+
+        const settings = {
+          settings_id: `settings_${id()}`,
+          account_id: accountId,
+          notifications: {
+            email_deal_alerts: true,
+            email_window_closing: true,
+            weekly_digest: true
+          },
+          automation_defaults: {
+            allow_similar: false,
+            allow_cross_border: false,
+            default_execution_mode: "Manual"
+          },
+          privacy: {
+            receipt_retention_days: 365,
+            allow_analytics: true
+          },
+          created_at: timestamp,
+          updated_at: timestamp
+        };
+
+        const billing = {
+          billing_profile_id: `billing_${id()}`,
+          account_id: accountId,
+          provider: "manual",
+          provider_customer_id: null,
+          provider_subscription_id: null,
+          billing_email: normalizedEmail,
+          billing_status: "trialing",
+          current_period_end: null,
+          created_at: timestamp,
+          updated_at: timestamp
+        };
+
+        await db.transact([
+          db.tx.accounts[id()].update(account),
+          db.tx.account_memberships[id()].update(membership),
+          db.tx.account_profiles[id()].update(profile),
+          db.tx.account_settings[id()].update(settings),
+          db.tx.billing_profiles[id()].update(billing)
+        ]);
+      }
     }
 
     const deviceSession = {
