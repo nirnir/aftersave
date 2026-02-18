@@ -1408,23 +1408,28 @@ app.patch("/api/account/settings", requireAdminToken, async (req, res) => {
   }
 });
 
-app.listen(PORT, async () => {
-  console.log(
-    `[server] API running at http://localhost:${PORT} (Instant App: ${INSTANT_APP_ID})`
-  );
+// Export for Vercel serverless; only listen when running standalone
+if (process.env.VERCEL) {
+  module.exports = app;
+} else {
+  app.listen(PORT, async () => {
+    console.log(
+      `[server] API running at http://localhost:${PORT} (Instant App: ${INSTANT_APP_ID})`
+    );
 
-  if (!INSTANT_ADMIN_TOKEN) {
-    return;
-  }
-
-  try {
-    const seedResult = await seedSampleData();
-    if (seedResult.seeded) {
-      console.log(
-        `[server] Seeded ${seedResult.added} purchases into InstantDB (replaced ${seedResult.replaced}).`
-      );
+    if (!INSTANT_ADMIN_TOKEN) {
+      return;
     }
-  } catch (error) {
-    console.error("[server] Failed seeding InstantDB data:", error);
-  }
-});
+
+    try {
+      const seedResult = await seedSampleData();
+      if (seedResult.seeded) {
+        console.log(
+          `[server] Seeded ${seedResult.added} purchases into InstantDB (replaced ${seedResult.replaced}).`
+        );
+      }
+    } catch (error) {
+      console.error("[server] Failed seeding InstantDB data:", error);
+    }
+  });
+}

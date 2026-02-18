@@ -279,55 +279,6 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* ===== PROBLEM / DEAD ZONE ===== */}
-      <section className="lp-section lp-problem">
-        <span className="lp-label lp-label-center">The problem</span>
-        <h2 className="lp-h2 lp-text-center">The price drops <em>after</em> you buy.<br />Nobody tells you.</h2>
-        <p className="lp-body lp-text-center lp-mw-prose">
-          Coupons and deal-finders stop working the moment you click &ldquo;Buy.&rdquo; But prices keep changing. Your return window is open, and you&rsquo;re leaving money on the table.
-        </p>
-        <div className="lp-timeline-wrapper">
-          <div className="lp-timeline">
-            <div className="lp-tl-step lp-tl-past">
-              <div className="lp-tl-icon">🔍</div>
-              <span>Search</span>
-            </div>
-            <div className="lp-tl-step lp-tl-past">
-              <div className="lp-tl-icon">⚖️</div>
-              <span>Compare</span>
-            </div>
-            <div className="lp-tl-step lp-tl-past lp-tl-buy">
-              <div className="lp-tl-icon">🛒</div>
-              <span>Buy</span>
-            </div>
-            <div className="lp-tl-divider">
-              <div className="lp-tl-divider-line"></div>
-              <span>you&rsquo;re here</span>
-              <div className="lp-tl-divider-line"></div>
-            </div>
-            <div className="lp-tl-step lp-tl-danger">
-              <div className="lp-tl-icon">💸</div>
-              <span>Dead Zone</span>
-              <small>Price can still drop</small>
-              <div className="lp-tl-drop-arrow">↓ $</div>
-            </div>
-            <div className="lp-tl-step lp-tl-future">
-              <div className="lp-tl-icon">📦</div>
-              <span>Delivery</span>
-            </div>
-          </div>
-          <div className="lp-tl-coverage">
-            <div className="lp-tl-cov-bar lp-tl-cov-others">
-              <span>Honey, Capital One, etc.</span>
-            </div>
-            <div className="lp-tl-cov-bar lp-tl-cov-gap"></div>
-            <div className="lp-tl-cov-bar lp-tl-cov-aftersave">
-              <span>⚡ AfterSave</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* ===== MODES ===== */}
       <section className="lp-section" id="product-modes">
         <span className="lp-label lp-label-center">Choose your level of control</span>
