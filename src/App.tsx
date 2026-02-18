@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { PurchasesListPage } from "./pages/PurchasesListPage";
 import { PurchaseDetailsPage } from "./pages/PurchaseDetailsPage";
+import { LandingPage } from "./pages/LandingPage";
 
 export const App: React.FC = () => {
   return (
@@ -9,7 +10,7 @@ export const App: React.FC = () => {
       <div className="app-root">
         <Navbar />
         <Routes>
-          <Route path="/" element={<PurchasesListPage />} />
+                    <Route path="/" element={<LandingPage />} />
           <Route
             path="/purchase/:purchaseId"
             element={<PurchaseDetailsPage />}
