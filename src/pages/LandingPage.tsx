@@ -99,6 +99,8 @@ export const LandingPage: React.FC = () => {
   const [country, setCountry] = useState("DE");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [simAnimated, setSimAnimated] = useState(false);
+  const [heroSavings, setHeroSavings] = useState(0);
+  const [heroSwaps, setHeroSwaps] = useState(12430);
 
   const sel = useMemo(() => COUNTRIES.find((c) => c.code === country) ?? COUNTRIES[0], [country]);
 
@@ -122,6 +124,64 @@ export const LandingPage: React.FC = () => {
     }
   }, [simAnimated, estimate]);
 
+  /* -- Hero stats counter: start at 84,200 and climb forever, persisting across refresh -- */
+  const HERO_SAVINGS_BASE = 84200;
+  const HERO_SAVINGS_INCREMENT_PER_TICK = 3;
+  const HERO_SAVINGS_TICK_MS = 1000;
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const savingsKey = "aftersave_hero_savings";
+    const swapsKey = "aftersave_hero_swaps";
+
+    const storedSavingsRaw = window.localStorage.getItem(savingsKey);
+    const storedSavings = storedSavingsRaw ? Number(storedSavingsRaw) : NaN;
+
+    const storedSwapsRaw = window.localStorage.getItem(swapsKey);
+    const storedSwaps = storedSwapsRaw ? Number(storedSwapsRaw) : NaN;
+
+    let currentSavings = Number.isFinite(storedSavings) && storedSavings >= HERO_SAVINGS_BASE ? storedSavings : HERO_SAVINGS_BASE;
+    let currentSwaps = Number.isFinite(storedSwaps) && storedSwaps >= 12430 ? storedSwaps : 12430;
+    let tickCount = 0;
+
+    setHeroSavings(currentSavings);
+    setHeroSwaps(currentSwaps);
+
+    const tick = () => {
+      tickCount += 1;
+      currentSavings += HERO_SAVINGS_INCREMENT_PER_TICK;
+      setHeroSavings(currentSavings);
+      try {
+        window.localStorage.setItem(savingsKey, String(currentSavings));
+      } catch {
+        // ignore storage errors
+      }
+
+      if (tickCount % 4 === 0) {
+        currentSwaps += 1;
+        setHeroSwaps(currentSwaps);
+        try {
+          window.localStorage.setItem(swapsKey, String(currentSwaps));
+        } catch {
+          // ignore storage errors
+        }
+      }
+    };
+
+    const id = window.setInterval(tick, HERO_SAVINGS_TICK_MS);
+    return () => window.clearInterval(id);
+  }, []);
+
+  const heroSavingsFormatted = useMemo(
+    () => new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(heroSavings),
+    [heroSavings],
+  );
+
+  const heroSwapsFormatted = useMemo(
+    () => new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(heroSwaps),
+    [heroSwaps],
+  );
+
   /* -- SEO -- */
   useEffect(() => {
     const prev = document.title;
@@ -143,11 +203,12 @@ export const LandingPage: React.FC = () => {
         <div className="lp-hero-inner">
           <p className="lp-hero-badge">Post-purchase price protection</p>
           <h1 className="lp-hero-h1">
-            Bought something online?<br />
-            <span className="lp-hero-gradient">We make sure you got the best price.</span>
+            Shopping doesn&rsquo;t stop at checkout.<br />
+            <span className="lp-hero-gradient">Neither do we.</span>
           </h1>
           <p className="lp-hero-sub">
-            AfterSave watches your orders after checkout. If the price drops while you can still cancel, we help you swap and pocket the difference.
+            Buy anywhere, anytime.<br />
+            We monitor your purchase and help you reclaim savings if the price drops.
           </p>
           <div className="lp-hero-cta-row">
             <Link to="/auth" className="lp-btn lp-btn-primary lp-btn-lg">
@@ -165,6 +226,22 @@ export const LandingPage: React.FC = () => {
               </li>
             ))}
           </ul>
+          <div className="lp-stats-bar lp-hero-stats">
+            <div className="lp-stat">
+              <strong>{heroSavingsFormatted}</strong>
+              <span>Savings generated</span>
+            </div>
+            <div className="lp-stat-divider" />
+            <div className="lp-stat">
+              <strong>{heroSwapsFormatted}</strong>
+              <span>Number of swaps</span>
+            </div>
+            <div className="lp-stat-divider" />
+            <div className="lp-stat">
+              <strong>3h 18m</strong>
+              <span>Average time to first alert</span>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -341,26 +418,6 @@ export const LandingPage: React.FC = () => {
               <h4>Full audit log</h4>
               <p>Every action is logged. Pause or stop monitoring at any time with one click.</p>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ===== SOCIAL PROOF ===== */}
-      <section className="lp-section" id="social-proof">
-        <div className="lp-stats-bar">
-          <div className="lp-stat">
-            <strong>&euro;84,200+</strong>
-            <span>Savings generated</span>
-          </div>
-          <div className="lp-stat-divider" />
-          <div className="lp-stat">
-            <strong>12,430</strong>
-            <span>Return windows monitored</span>
-          </div>
-          <div className="lp-stat-divider" />
-          <div className="lp-stat">
-            <strong>3h 18m</strong>
-            <span>Average time to first alert</span>
           </div>
         </div>
       </section>

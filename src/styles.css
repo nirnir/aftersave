@@ -1109,6 +1109,51 @@ body {
   background: rgba(226, 232, 240, 0.6);
 }
 
+.navbar-profile-wrap {
+  position: relative;
+}
+
+.navbar-profile-dropdown {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  right: 0;
+  min-width: 10rem;
+  padding: 0.35rem;
+  background: #fff;
+  border: 1px solid #E2E8F0;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 40px rgba(15, 23, 42, 0.12);
+  z-index: 100;
+}
+
+.navbar-profile-item {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  background: none;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #334155;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.navbar-profile-item:hover {
+  background: #F1F5F9;
+}
+
+.navbar-profile-item-danger {
+  color: #DC2626;
+}
+
+.navbar-profile-item-danger:hover {
+  background: #FEF2F2;
+}
+
 .navbar-badge {
   position: absolute;
   top: 0.35rem;
@@ -1228,6 +1273,7 @@ body {
   color: #64748B; font-size: 0.82rem; font-weight: 500;
 }
 .lp-trust-row svg { color: #64748B; }
+.lp-hero-stats { margin-top: 2.5rem; }
 
 /* Live Example */
 .lp-example-wrapper {

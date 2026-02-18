@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { BrowserRouter, Link, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { PurchasesListPage } from "./pages/PurchasesListPage";
 import { PurchaseDetailsPage } from "./pages/PurchaseDetailsPage";
+import { SettingsPage } from "./pages/SettingsPage";
 import { LandingPage } from "./pages/LandingPage";
 import { AuthPage } from "./pages/AuthPage";
 import { InstantAuthProvider } from "./auth/instantAuth";
@@ -59,6 +60,14 @@ const AppContent: React.FC = () => {
             </RequireAuth>
           )}
         />
+        <Route
+          path="/settings"
+          element={(
+            <RequireAuth>
+              <SettingsPage />
+            </RequireAuth>
+          )}
+        />
         <Route path="*" element={<Navigate to={user ? "/app" : "/"} replace />} />
       </Routes>
     </>
@@ -103,11 +112,33 @@ const LandingNavbar: React.FC = () => {
 
 // ---------- Navbar ----------
 
+const ProfileIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <svg className={className} width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <circle cx="12" cy="12" r="10" />
+    <circle cx="12" cy="10" r="3" />
+    <path d="M6.168 18.849A4 4 0 0 1 10 16h4a4 4 0 0 1 3.834 2.855" />
+  </svg>
+);
+
 const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const { signOut } = useInstantAuth();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  async function handleSignOut() {
+  useEffect(() => {
+    if (!dropdownOpen) return;
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, [dropdownOpen]);
+
+  async function handleLogout() {
+    setDropdownOpen(false);
     await signOut();
     navigate("/auth", { replace: true });
   }
@@ -126,12 +157,31 @@ const Navbar: React.FC = () => {
           </div>
         </Link>
         <div className="navbar-actions">
-          <Link className="btn-secondary btn-link navbar-cta-link" to="/">
-            Home
-          </Link>
-          <button type="button" className="btn-secondary btn-link navbar-cta-link" onClick={handleSignOut}>
-            Sign out
-          </button>
+          <div className="navbar-profile-wrap" ref={dropdownRef}>
+            <button
+              type="button"
+              className="navbar-icon-btn navbar-profile-btn"
+              onClick={() => setDropdownOpen((o) => !o)}
+              aria-expanded={dropdownOpen}
+              aria-haspopup="true"
+              aria-label="Open profile menu"
+            >
+              <ProfileIcon />
+            </button>
+            {dropdownOpen && (
+              <div className="navbar-profile-dropdown" role="menu">
+                <Link className="navbar-profile-item" to="/app" role="menuitem" onClick={() => setDropdownOpen(false)}>
+                  Profile
+                </Link>
+                <Link className="navbar-profile-item" to="/settings" role="menuitem" onClick={() => setDropdownOpen(false)}>
+                  Settings
+                </Link>
+                <button type="button" className="navbar-profile-item navbar-profile-item-danger" role="menuitem" onClick={handleLogout}>
+                  Logout
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </nav>
