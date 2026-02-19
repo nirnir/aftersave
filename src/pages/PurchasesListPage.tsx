@@ -6,6 +6,7 @@ import {
   formatCurrency,
   formatPurchaseDate,
   formatTimeRemainingFriendly,
+  formatLiveCountdown,
   isUrgent,
   filterPurchases,
   sortPurchases,
@@ -29,24 +30,47 @@ export const PurchasesListPage: React.FC = () => {
   const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [fetchedAt, setFetchedAt] = useState(Date.now());
+  const [now, setNow] = useState(Date.now());
 
-  const loadPurchases = useCallback(async () => {
+  const loadPurchases = useCallback(async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       setError(null);
       const rows = await fetchPurchases();
       setPurchases(rows);
+      setFetchedAt(Date.now());
+      setNow(Date.now());
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to load purchases."
-      );
+      if (!silent) {
+        setError(
+          err instanceof Error ? err.message : "Failed to load purchases."
+        );
+      }
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     void loadPurchases();
+  }, [loadPurchases]);
+
+  // Tick every 60s to keep time-remaining labels fresh
+  useEffect(() => {
+    const interval = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Re-fetch when the tab becomes visible again
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        void loadPurchases(true);
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
   }, [loadPurchases]);
 
   // Debounce search
@@ -63,25 +87,41 @@ export const PurchasesListPage: React.FC = () => {
     setSearchParams(params, { replace: true });
   }, [activeFilter, debouncedSearch, setSearchParams]);
 
+  // Locally adjust cancellation_window_remaining between server fetches
+  const adjustedPurchases = useMemo(() => {
+    const elapsed = Math.floor((now - fetchedAt) / 1000);
+    if (elapsed < 1) return purchases;
+    return purchases.map((p) => ({
+      ...p,
+      cancellation_window_remaining:
+        p.cancellation_window_remaining !== undefined
+          ? Math.max(0, p.cancellation_window_remaining - elapsed)
+          : undefined
+    }));
+  }, [purchases, fetchedAt, now]);
+
   const filteredPurchases = useMemo(() => {
-    let result = purchases;
+    let result = adjustedPurchases;
     result = filterPurchases(result, activeFilter);
     result = searchPurchases(result, debouncedSearch);
     result = sortPurchases(result, "urgency");
     return result;
-  }, [purchases, activeFilter, debouncedSearch]);
+  }, [adjustedPurchases, activeFilter, debouncedSearch]);
 
   const filterCounts = useMemo(
     () => ({
-      all: countByFilter(purchases, "all"),
-      savings_available: countByFilter(purchases, "savings_available"),
-      searching: countByFilter(purchases, "searching"),
-      return_soon: countByFilter(purchases, "return_soon")
+      all: countByFilter(adjustedPurchases, "all"),
+      savings_available: countByFilter(adjustedPurchases, "savings_available"),
+      searching: countByFilter(adjustedPurchases, "searching"),
+      return_soon: countByFilter(adjustedPurchases, "return_soon")
     }),
-    [purchases]
+    [adjustedPurchases]
   );
 
-  const totalSavings = useMemo(() => getTotalSavings(purchases), [purchases]);
+  const totalSavings = useMemo(
+    () => getTotalSavings(adjustedPurchases),
+    [adjustedPurchases]
+  );
 
   const handleCardClick = useCallback(
     (purchaseId: string) => {
@@ -234,10 +274,31 @@ const PurchaseCard: React.FC<PurchaseCardProps> = ({ purchase, onClick }) => {
   const isPaused = purchase.status === "paused";
   const isExpired = purchase.status === "expired";
 
-  const timeLabel = formatTimeRemainingFriendly(
-    purchase.cancellation_window_remaining
-  );
-  const urgent = isUrgent(purchase.cancellation_window_remaining);
+  // Live countdown for items with < 1 hour remaining
+  const initialSeconds = purchase.cancellation_window_remaining;
+  const isSubHour = initialSeconds !== undefined && initialSeconds > 0 && initialSeconds < 3600;
+  const [liveSeconds, setLiveSeconds] = useState<number | undefined>(initialSeconds);
+
+  useEffect(() => {
+    if (!isSubHour) return;
+    setLiveSeconds(initialSeconds);
+    const interval = setInterval(() => {
+      setLiveSeconds((prev) => {
+        if (prev === undefined || prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [initialSeconds, isSubHour]);
+
+  const displaySeconds = isSubHour ? liveSeconds : initialSeconds;
+  const timeLabel = isSubHour && liveSeconds !== undefined && liveSeconds > 0
+    ? formatLiveCountdown(liveSeconds)
+    : formatTimeRemainingFriendly(displaySeconds);
+  const urgent = isUrgent(displaySeconds);
 
   const itemTitle =
     purchase.item_count && purchase.item_count > 1

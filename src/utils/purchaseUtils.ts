@@ -72,7 +72,20 @@ export function formatTimeRemainingFriendly(seconds?: number): string | null {
   if (days > 0) {
     return `${days} day${days === 1 ? "" : "s"} left to return`;
   }
-  return `Only ${hours} hour${hours === 1 ? "" : "s"} left!`;
+  if (hours > 0) {
+    return `Only ${hours} hour${hours === 1 ? "" : "s"} left!`;
+  }
+  // < 1 hour: handled by live countdown in the card
+  const minutes = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${minutes}m ${String(secs).padStart(2, "0")}s left!`;
+}
+
+export function formatLiveCountdown(seconds: number): string {
+  const minutes = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  if (minutes === 0) return `${secs}s left!`;
+  return `${minutes}m ${String(secs).padStart(2, "0")}s left!`;
 }
 
 export function isUrgent(seconds?: number): boolean {
@@ -125,11 +138,13 @@ const filterStatusGroups: Record<FilterOption, PurchaseStatus[]> = {
   return_soon: ["needs_review", "paused", "expired", "swap_completed"]
 };
 
+const PAST_STATUSES: PurchaseStatus[] = ["expired", "swap_completed"];
+
 export function filterPurchases(
   purchases: PurchaseListItem[],
   filter: FilterOption
 ): PurchaseListItem[] {
-  if (filter === "all") return purchases;
+  if (filter === "all") return purchases.filter((p) => !PAST_STATUSES.includes(p.status));
   const statuses = filterStatusGroups[filter];
   return purchases.filter((p) => statuses.includes(p.status));
 }
@@ -138,7 +153,7 @@ export function countByFilter(
   purchases: PurchaseListItem[],
   filter: FilterOption
 ): number {
-  if (filter === "all") return purchases.length;
+  if (filter === "all") return purchases.filter((p) => !PAST_STATUSES.includes(p.status)).length;
   const statuses = filterStatusGroups[filter];
   return purchases.filter((p) => statuses.includes(p.status)).length;
 }
